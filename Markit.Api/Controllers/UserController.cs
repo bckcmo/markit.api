@@ -9,8 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Markit.Api.Controllers
 {
-    [ApiController]
-    [Route("user")]
+    [ApiController, Route("user")]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -20,7 +19,7 @@ namespace Markit.Api.Controllers
             _logger = logger;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{userId}")]
         public IActionResult Get(int id)
         {
             return Ok( new User
@@ -63,6 +62,18 @@ namespace Markit.Api.Controllers
         public IActionResult Delete(int id)
         {
             return Ok();
+        }
+        
+        [HttpGet("{userId}/lists")]
+        public IActionResult GetAll(string userId)
+        {
+            return Ok($"userId: {userId}");
+        }
+        
+        [HttpGet("{userId}/list/{listId}/analyze")]
+        public IActionResult Get(string userId, string listId)
+        {
+            return Ok($"userId: {userId}, listId: {listId}");
         }
 
         [HttpPost("auth")]
