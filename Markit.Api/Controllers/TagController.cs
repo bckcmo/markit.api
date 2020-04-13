@@ -2,12 +2,13 @@
 
 namespace Markit.Api.Controllers
 {
+    [ApiController, Route("tags")]
     public class TagController : Controller
     {
-        // GET
-        public IActionResult Index()
+        [HttpGet]
+        public IActionResult Query([FromQuery] string tagQuery)
         {
-            return View();
+            return Ok(tagQuery);
         }
     }
 }

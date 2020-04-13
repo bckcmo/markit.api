@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
 {
+    [ApiController, Route("healthcheck")]
     public class HealthCheckController : Controller
     {
-        // GET
+        [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            return Json(new Dictionary<string, bool> { {"healthy", true} });
         }
     }
 }
