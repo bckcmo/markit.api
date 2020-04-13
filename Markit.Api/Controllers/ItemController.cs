@@ -5,10 +5,10 @@ namespace Markit.Api.Controllers
     [ApiController, Route("item")]
     public class ItemController : Controller
     {
-        [HttpGet("{listId}")]
-        public IActionResult Get(string userId, string listId)
+        [HttpGet("{itemId}")]
+        public IActionResult Get(string itemId)
         {
-            return Ok($"itemId: {listId}");
+            return Ok($"itemId: {itemId}");
         }
         
         [HttpPost]
@@ -17,10 +17,10 @@ namespace Markit.Api.Controllers
             return Ok("item");
         }
 
-        [HttpDelete("{listId}")]
-        public IActionResult Delete(string listId)
+        [HttpDelete("{itemId}")]
+        public IActionResult Delete(string itemId)
         {
-            return Ok($"itemId: {listId}");
+            return Ok($"itemId: {itemId}");
         }
     }
 }
