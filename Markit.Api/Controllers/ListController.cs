@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
  {
@@ -6,27 +8,109 @@ namespace Markit.Api.Controllers
      public class ListController : Controller
      {
          [HttpGet("{listId}")]
-         public IActionResult Get(string userId, string listId)
-         {
-             return Ok($"listId: {listId}, userId: {userId}");
+         public IActionResult Get(int listId)
+         { 
+             return Ok(new ShoppingList
+             {
+                 Id = listId,
+                 Name = "Test List",
+                 Description = "This is a hardcoded list",
+                 ListTags = new List<ListTag>
+                 {
+                     new ListTag
+                       {
+                           Id = 0,
+                           Tag = new Tag
+                           {
+                             Id = 0,
+                             Name = "Cat food"
+                           },
+                           Quantity = 1,
+                           Comment = "Meow Meow"
+                       },
+                       new ListTag
+                       {
+                           Id = 1,
+                           Tag = new Tag
+                           {
+                               Id = 20,
+                               Name = "Doritos"
+                           },
+                           Quantity = 1,
+                       },
+                       new ListTag
+                       {
+                           Id = 2,
+                           Tag = new Tag
+                           {
+                               Id = 6,
+                               Name = "Bread"
+                           },
+                           Quantity = 1,
+                       }
+                   },
+                });
          }
          
          [HttpPost]
-         public IActionResult Post()
+         public IActionResult Post(ShoppingList list)
          {
-             return Ok("test");
+             return Ok(list);
          }
-         
+
          [HttpPatch("{listId}")]
-         public IActionResult Patch(string listId, string tag)
+         public IActionResult Patch(int listId, ListTag tag)
          {
-             return Ok($"listId: {listId}, tag: {tag}");
+             var list = new ShoppingList
+             {
+                 Id = listId,
+                 Name = "Test List",
+                 Description = "This is a hardcoded list",
+                 ListTags = new List<ListTag>
+                 {
+                     new ListTag
+                     {
+                         Id = 0,
+                         Tag = new Tag
+                         {
+                             Id = 0,
+                             Name = "Cat food"
+                         },
+                         Quantity = 1,
+                         Comment = "Meow Meow"
+                     },
+                     new ListTag
+                     {
+                         Id = 1,
+                         Tag = new Tag
+                         {
+                             Id = 20,
+                             Name = "Doritos"
+                         },
+                         Quantity = 1,
+                     },
+                     new ListTag
+                     {
+                         Id = 2,
+                         Tag = new Tag
+                         {
+                             Id = 6,
+                             Name = "Bread"
+                         },
+                         Quantity = 1,
+                     }
+                 },
+             };
+             
+             list.ListTags.Add(tag);
+
+             return Ok(list);
          }
          
          [HttpDelete("{listId}")]
          public IActionResult Delete(string listId)
          {
-             return Ok($"listId: {listId}");
+             return Ok();
          }
      }
  }

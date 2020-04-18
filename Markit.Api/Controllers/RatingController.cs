@@ -1,19 +1,43 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Generic;
+using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
 {
+    [ApiController]
     public class RatingController : Controller
     {
         [HttpPost("rating")]
-        public IActionResult Post()
+        public IActionResult Post(Rating rating)
         {
-            return Ok("placeholder");
+            return Ok(rating);
         }
         
         [HttpGet("ratings")]
         public IActionResult GetAll([FromQuery] decimal latitude, [FromQuery] decimal longitude)
         {
-            return Ok($"Latitude: {latitude}, Longitude: {longitude}");
+            return Ok(new List<Rating>
+            {
+                new Rating
+                {
+                    Id = 1,
+                    Store = new Store
+                    {
+                       Id = 0,
+                       Name ="Food 'n Stuff",
+                       StreetAddress = "101 Main St.",
+                       City = "Pawnee",
+                       State = "IN",
+                       Coordinate = new Coordinate
+                       {
+                           Latitude = latitude,
+                           Longitude = longitude
+                       }
+                    },
+                    Comment = "Great store. It's where I get all my food. And most of my stuff.",
+                    Points = 5
+                }
+            });
         }
     }
 }

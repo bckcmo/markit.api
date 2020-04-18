@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
  {
@@ -6,27 +7,34 @@ namespace Markit.Api.Controllers
      public class StoreController : Controller
      {
          [HttpGet("{storeId}")]
-         public IActionResult Get(string storeId)
+         public IActionResult Get(int storeId)
          {
-             return Ok($"storeId: {storeId}");
+            return Ok(new Store
+            {
+               Id = storeId,
+               Name ="Food 'n Stuff",
+               StreetAddress = "101 Main St.",
+               City = "Pawnee",
+               State = "IN"
+            });
          }
          
          [HttpPost]
-         public IActionResult Post()
+         public IActionResult Post(Store store)
          {
-             return Ok("test");
+             return Ok(store);
          }
          
-         [HttpPatch("{storeId}")]
-         public IActionResult Patch(string storeId)
+         [HttpPut]
+         public IActionResult Put(Store store)
          {
-             return Ok($"storeId: {storeId}");
+             return Ok(store);
          }
          
          [HttpDelete("{storeId}")]
          public IActionResult Delete(string storeId)
          {
-             return Ok($"storeId: {storeId}");
+             return Ok();
          }
      }
  }

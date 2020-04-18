@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -9,7 +10,10 @@ namespace Markit.Api.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return Json(new Dictionary<string, bool> { {"healthy", true} });
+            return Ok(new Healthcheck
+            {
+                AmIHealthy = true
+            });
         }
     }
 }

@@ -9,5 +9,9 @@
       <PackageReference Include="Swashbuckle.AspNetCore" Version="5.3.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Managers" />
+    </ItemGroup>
+
 
 </Project>
