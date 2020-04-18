@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Markit.Api.Models.Dtos;
+﻿using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
