@@ -31,5 +31,5 @@ jobs:
       with:
         app-name: 'markit-api'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_3d01a72d42294d5389e1519df0b943b3 }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_23096a0069104aacadc6f8669d50225e }}
         package: ${{env.DOTNET_ROOT}}/myapp 
