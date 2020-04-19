@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Markit.Api.Interfaces.Managers;
+using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Messages;
@@ -14,37 +16,40 @@ namespace Markit.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
+        private readonly IUserManager _userManager;
 
-        public UserController(ILogger<UserController> logger)
+        public UserController(ILogger<UserController> logger, IUserManager userManager)
         {
             _logger = logger;
+            _userManager = userManager;
         }
         
         [HttpGet("{userId}")]
-        public IActionResult Get(int userId)
+        public async Task<IActionResult> Get(int userId)
         {
-            return Ok( new User
+            try
             {
-               Id = userId,
-               FirstName = "TestFirstName",
-               LastName = "TestLastName",
-               Email = "Test@example.com",
-               UserName = "TEsTUseR",
-               Reputation = 100,
-            });
+                var user = await _userManager.GetUserByIdAsync(userId);
+                return Ok(user);
+            }
+            catch
+            {
+                return NotFound(new {Error = "The user was not found"});
+            }
         }
-
+        
         [HttpPost]
-        public IActionResult Post(UserRegistration userRegistration)
+        public async Task<IActionResult> Post(UserRegistration user)
         {
-            return Ok(new User
+            try
             {
-                Id = 1,
-                FirstName = userRegistration.FirstName,
-                LastName = userRegistration.LastName,
-                Email = userRegistration.Email,
-                Reputation = 0,
-            });
+               var newUser = await _userManager.CreateUserAsync(user);
+               return Ok(newUser);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
         }
         
         [HttpPut]

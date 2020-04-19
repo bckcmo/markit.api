@@ -1,4 +1,5 @@
-﻿using Markit.Api.Models.Dtos;
+﻿using System.Collections.Generic;
+using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -17,6 +18,27 @@ namespace Markit.Api.Controllers
                City = "Pawnee",
                State = "IN"
             });
+         }
+         
+         [HttpGet("query")]
+         public IActionResult Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
+         {
+             return Ok(new List<Store>
+             {
+                 new Store
+                 {
+                     Id = 4,
+                     Name = "Food 'n Stuff",
+                     StreetAddress = "101 Main St.",
+                     City = "Pawnee",
+                     State = "IN",
+                     Coordinate = new Coordinate
+                     {
+                         Latitude = latitude,
+                         Longitude = longitude
+                     }
+                 }
+             });
          }
          
          [HttpPost]

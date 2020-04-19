@@ -13,8 +13,8 @@ namespace Markit.Api.Controllers
             return Ok(rating);
         }
         
-        [HttpGet("ratings")]
-        public IActionResult GetAll([FromQuery] decimal latitude, [FromQuery] decimal longitude)
+        [HttpGet("rating/query")]
+        public IActionResult Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
         {
             return Ok(new List<Rating>
             {
