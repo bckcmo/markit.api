@@ -20,8 +20,7 @@ namespace Markit.Api.Controllers
         {
             return Ok(new Healthcheck
             {
-                AmIHealthy = true,
-                Message = $"Connection String: {_configuration.GetConnectionString("MySql")}, EnvVar: {Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb")}"
+                AmIHealthy = true
             });
         }
     }
