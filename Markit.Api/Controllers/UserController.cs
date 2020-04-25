@@ -1,61 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
-using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models;
 using Markit.Api.Models.Dtos;
-using Markit.Api.Models.Messages;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Markit.Api.Controllers
 {
+    [Authorize]
     [ApiController, Route("user")]
     public class UserController : ControllerBase
     {
-        private readonly ILogger<UserController> _logger;
         private readonly IUserManager _userManager;
+        private readonly IHttpContextAccessor _httpContext;
 
-        public UserController(ILogger<UserController> logger, IUserManager userManager)
+        public UserController(IUserManager userManager, IHttpContextAccessor httpContext)
         {
-            _logger = logger;
             _userManager = userManager;
+            this._httpContext = httpContext;
         }
         
         [HttpGet("{userId}")]
         public async Task<IActionResult> Get(int userId)
         {
-            try
+            if (!_httpContext.IsUserAllowed(userId))
             {
-                var user = await _userManager.GetUserByIdAsync(userId);
-                return Ok(user);
+                return Unauthorized();
             }
-            catch
+            
+            var user = await _userManager.GetUserByIdAsync(userId);
+
+            if (user == null)
             {
-                return NotFound(new {Error = "The user was not found"});
+                return NotFound();
             }
+            
+            return Ok(user);
         }
         
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Post(UserRegistration user)
         {
-            try
-            {
-               var newUser = await _userManager.CreateUserAsync(user);
-               return Ok(newUser);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            var newUser = await _userManager.CreateUserAsync(user);
+            return Ok(newUser);
         }
-        
+
         [HttpPut]
-        public IActionResult Put(User user)
+        public async Task<IActionResult> Put(User user)
         {
-            return Ok(user);
+            if (!_httpContext.IsUserAllowed(user.Id))
+            {
+                return Unauthorized();
+            }
+            
+            var userResponse = await _userManager.UpdateUserAsync(user);
+
+            if (user.Id == 0)
+            {
+                return NotFound();
+            }
+            
+            return Ok(userResponse);
         }
         
         [HttpDelete]
@@ -198,13 +207,12 @@ namespace Markit.Api.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost("auth")]
-        public IActionResult Post(UserAuth authRequest)
+        public async Task<IActionResult> Post(UserAuth authRequest)
         {
-            return Ok(new UserAuthResponse
-            {
-                Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0b3B0YWwuY29tIiwiZXhw"
-            });
+            var token = await _userManager.GenerateToken(authRequest);
+            return Ok(token);
         }
     }
 }

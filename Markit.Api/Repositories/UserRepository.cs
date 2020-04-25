@@ -23,9 +23,9 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> GetById(int id)
         {
             using var conn = connection;
-            var query = "SELECT * from users WHERE id = @id";
+            var query = "SELECT Id, FirstName, LastName, Email, Reputation FROM users WHERE id = @id";
             conn.Open();
-            var result = await conn.QuerySingleAsync<UserEntity>(query, new {Id = id});
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Id = id});
             return result;
         }
 
@@ -40,6 +40,34 @@ namespace Markit.Api.Repositories
             
             var result = await conn.QueryAsync<UserEntity>(insertQuery, user);
             return result.Single();
+        }
+
+        public async Task<UserEntity> GetByEmail(string email)
+        {
+            using var conn = connection;
+            var query = "SELECT Id, FirstName, LastName, Email, Reputation FROM users WHERE Email = @email";
+            conn.Open();
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Email = email});
+            return result;
+        }
+        
+        public async Task<UserEntity> Update(User user)
+        {
+            using var conn = connection;
+            var query = @"UPDATE users SET Id = @Id, FirstName = @FirstName, LastName = @LastName, 
+            Email = @Email, Reputation = @Reputation WHERE Id = @Id";
+            conn.Open();
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, user);
+            return result;
+        }
+        
+        public async Task<UserEntity> Delete(int id)
+        {
+            using var conn = connection;
+            var query = @"DELETE FROM users WHERE Id = @Id";
+            conn.Open();
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Id = id});
+            return result;
         }
     }
 }
