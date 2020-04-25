@@ -20,7 +20,8 @@ namespace Markit.Api.Controllers
         {
             return Ok(new Healthcheck
             {
-                AmIHealthy = true
+                AmIHealthy = true,
+                Message = $"{Environment.GetEnvironmentVariable("JWT_KEY")} : {Environment.GetEnvironmentVariable("JWT_ISSUER")}"
             });
         }
     }
