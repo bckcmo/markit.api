@@ -25,7 +25,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "JWT_KEY": "pwJEXCZ7-!?w^nWqVgR39@C_SxJy53@?",
-        "JWT_ISSUER": "https://localhost:5001"
+        "JWT_ISSUER": "https://localhost:5001",
+        "MYSQLCONNSTR_localdb": "Database=markitapi;Data Source=localhost:3306;User Id=root;Password=mypass123"
       }
     }
   }

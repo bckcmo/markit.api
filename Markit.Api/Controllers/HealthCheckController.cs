@@ -1,4 +1,5 @@
 ﻿using System;
+using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -9,9 +10,11 @@ namespace Markit.Api.Controllers
     public class HealthCheckController : Controller
     {
         private readonly IConfiguration _configuration;
-        public HealthCheckController(IConfiguration configuration)
+        private readonly IDatabaseUtil _databaseUtil;
+        public HealthCheckController(IConfiguration configuration, IDatabaseUtil databaseUtil)
         {
             _configuration = configuration;
+            _databaseUtil = databaseUtil;
         }
         
         [HttpGet]
@@ -20,7 +23,10 @@ namespace Markit.Api.Controllers
             return Ok(new Healthcheck
             {
                 AmIHealthy = true,
-                Message = $"{Environment.GetEnvironmentVariable("JWT_KEY")} : {Environment.GetEnvironmentVariable("JWT_ISSUER")} : {Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb")}"
+                Message = $"{Environment.GetEnvironmentVariable("JWT_KEY")} " +
+                          $": {Environment.GetEnvironmentVariable("JWT_ISSUER")} " +
+                          $": {Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb")}" +
+                          $": {_databaseUtil.GetConnectionString()}"
             });
         }
     }

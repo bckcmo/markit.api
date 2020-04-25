@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Markit.Api.Interfaces.Repositories;
+using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
 using Microsoft.Extensions.Configuration;
@@ -15,9 +16,9 @@ namespace Markit.Api.Repositories
         private readonly string connectionString;
         private IDbConnection connection => new MySqlConnection(connectionString);
 
-        public UserRepository(IConfiguration configuration)
+        public UserRepository(IDatabaseUtil databaseUtil)
         {
-            this.connectionString = configuration.GetConnectionString("MySql");
+            this.connectionString = databaseUtil.GetConnectionString();
         }
 
         public async Task<UserEntity> GetById(int id)
@@ -45,7 +46,7 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> GetByEmail(string email)
         {
             using var conn = connection;
-            var query = "SELECT Id, FirstName, LastName, Email, Reputation FROM users WHERE Email = @email";
+            var query = "SELECT Id, FirstName, LastName, Email, Reputation, Password FROM users WHERE Email = @email";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Email = email});
             return result;

@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
+using Markit.Api.Interfaces.Utils;
 using Markit.Api.Managers;
 using Markit.Api.Repositories;
+using Markit.Api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -90,7 +92,8 @@ namespace Markit.Api
             services
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
                 .AddTransient<IUserRepository, UserRepository>()
-                .AddSingleton<IUserManager, UserManager>();
+                .AddSingleton<IUserManager, UserManager>()
+                .AddSingleton<IDatabaseUtil, DatabaseUtil>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
