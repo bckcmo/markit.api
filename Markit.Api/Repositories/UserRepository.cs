@@ -6,19 +6,19 @@ using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 
 namespace Markit.Api.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly string connectionString;
-        private IDbConnection connection => new MySqlConnection(connectionString);
+        private readonly string _connectionString;
+        
+        private IDbConnection connection => new MySqlConnection(_connectionString);
 
         public UserRepository(IDatabaseUtil databaseUtil)
         {
-            this.connectionString = databaseUtil.GetConnectionString();
+            _connectionString = databaseUtil.GetConnectionString();
         }
 
         public async Task<UserEntity> GetById(int id)

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
+using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Messages;
 using Microsoft.IdentityModel.Tokens;
@@ -13,11 +14,13 @@ namespace Markit.Api.Managers
 {
     public class UserManager : IUserManager
     {
-        private IUserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IPasswordUtil _passwordUtil;
 
-        public UserManager(IUserRepository userRepository)
+        public UserManager(IUserRepository userRepository, IPasswordUtil passwordUtil)
         {
             _userRepository = userRepository;
+            _passwordUtil = passwordUtil;
         }
 
         public async Task<User> GetUserByIdAsync(int id)
@@ -36,6 +39,7 @@ namespace Markit.Api.Managers
 
         public async Task<User> CreateUserAsync(UserRegistration user)
         {
+            user.Password = _passwordUtil.Hash(user.Password);
             var userEntity = await _userRepository.CreateUser(user);
             
             return new User
@@ -78,7 +82,7 @@ namespace Markit.Api.Managers
         {
             var user = await _userRepository.GetByEmail(authRequest.Email);
             
-            if (user.Password != authRequest.Password)
+            if (!_passwordUtil.Verify(user.Password, authRequest.Password))
             {
                 throw new Exception("Invalid Password");
             }

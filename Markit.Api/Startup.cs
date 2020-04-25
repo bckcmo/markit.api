@@ -93,7 +93,8 @@ namespace Markit.Api
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
                 .AddTransient<IUserRepository, UserRepository>()
                 .AddSingleton<IUserManager, UserManager>()
-                .AddSingleton<IDatabaseUtil, DatabaseUtil>();
+                .AddSingleton<IDatabaseUtil, DatabaseUtil>()
+                .AddSingleton<IPasswordUtil, PasswordUtil>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
