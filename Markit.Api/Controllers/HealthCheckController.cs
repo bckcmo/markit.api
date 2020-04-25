@@ -2,7 +2,6 @@
 using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
 namespace Markit.Api.Controllers
 {
@@ -21,7 +20,7 @@ namespace Markit.Api.Controllers
             return Ok(new Healthcheck
             {
                 AmIHealthy = true,
-                Message = $"{Environment.GetEnvironmentVariable("JWT_KEY")} : {Environment.GetEnvironmentVariable("JWT_ISSUER")}"
+                Message = $"{Environment.GetEnvironmentVariable("JWT_KEY")} : {Environment.GetEnvironmentVariable("JWT_ISSUER")} : {Environment.GetEnvironmentVariable("MYSQLCONNSTR_localdb")}"
             });
         }
     }
