@@ -7,7 +7,7 @@ namespace Markit.Api.Models.Dtos
         public string StreetAddress { get; set; }
         public string City { get; set; }
         public string State { get; set; }
-        public int PostalCode { get; set; }
+        public string PostalCode { get; set; }
         public Coordinate Coordinate { get; set; }
     }
 }

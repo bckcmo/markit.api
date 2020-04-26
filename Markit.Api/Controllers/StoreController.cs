@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -7,6 +10,13 @@ namespace Markit.Api.Controllers
      [ApiController, Route("store")]
      public class StoreController : Controller
      {
+         private readonly IStoreManager _storeManager;
+
+         public StoreController(IStoreManager storeManager)
+         {
+             _storeManager = storeManager;
+         }
+         
          [HttpGet("{storeId}")]
          public IActionResult Get(int storeId)
          {
@@ -21,38 +31,28 @@ namespace Markit.Api.Controllers
          }
          
          [HttpGet("query")]
-         public IActionResult Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
+         public async Task<IActionResult> Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
          {
-             return Ok(new List<Store>
-             {
-                 new Store
-                 {
-                     Id = 4,
-                     Name = "Food 'n Stuff",
-                     StreetAddress = "101 Main St.",
-                     City = "Pawnee",
-                     State = "IN",
-                     Coordinate = new Coordinate
-                     {
-                         Latitude = latitude,
-                         Longitude = longitude
-                     }
-                 }
-             });
+             var stores = await _storeManager.QueryByCoordinatesAsync(latitude, longitude);
+             return Ok(stores);
          }
          
+         [Authorize]
          [HttpPost]
-         public IActionResult Post(Store store)
+         public async Task<IActionResult> Post(Store store)
          {
-             return Ok(store);
+             var newStore = await _storeManager.CreateStoreAsync(store);
+             return Ok(newStore);
          }
          
+         [Authorize]
          [HttpPut]
          public IActionResult Put(Store store)
          {
              return Ok(store);
          }
          
+         [Authorize]
          [HttpDelete("{storeId}")]
          public IActionResult Delete(string storeId)
          {
