@@ -2,10 +2,12 @@
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
 {
+    [Authorize]
     [ApiController, Route("item")]
     public class ItemController : Controller
     {
@@ -15,6 +17,7 @@ namespace Markit.Api.Controllers
             _itemManager = itemManager;
         }
         
+        [AllowAnonymous]
         [HttpGet("{itemId}")]
         public IActionResult Get(int itemId)
         {

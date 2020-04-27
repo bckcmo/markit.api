@@ -9,5 +9,6 @@ namespace Markit.Api.Interfaces.Repositories
         Task<ItemEntity> GetItemByUpc(string upc);
         Task<ItemEntity> GetItemById(int id);
         Task<ItemEntity> CreateItem(Item item);
+        Task<StoreItemEntity> CreateStoreItem(StoreItem item);
     }
 }

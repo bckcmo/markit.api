@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
@@ -17,18 +18,8 @@ namespace Markit.Api.Managers
         
         public async Task<StoreItem> CreateStoreItemAsync(StoreItem item)
         {
-            //check if item exists
-            
-            //if it doesn't, add item
-            
-            //add userPrice to item
-            
-            //add tags to item
-            var itemEntity = new ItemEntity
-            {
-                
-            };
-            
+            var newItem = await _itemRepository.CreateStoreItem(item);
+   
             return item;
         }
     }
