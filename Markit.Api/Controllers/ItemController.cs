@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -40,5 +39,7 @@ namespace Markit.Api.Controllers
         {
             return Ok();
         }
+        
+        // TODO add GET item/prices endpoint that gets most recent prices
     }
 }
