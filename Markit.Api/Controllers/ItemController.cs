@@ -18,19 +18,18 @@ namespace Markit.Api.Controllers
         
         [AllowAnonymous]
         [HttpGet("{itemId}")]
-        public IActionResult Get(int itemId)
+        public async Task<IActionResult> Get(int itemId)
         {
-            return Ok(new Item
-            {
-                Id = itemId,
-                Upc = "839472834759",
-            });
+            var item = await _itemManager.GetStoreItemByIdAsync(itemId);
+            return Ok(item);
         }
         
         [HttpPost]
-        public async Task<IActionResult> Post(StoreItem item)
+        public async Task<IActionResult> Post(PostStoreItem item)
         {
+            // TODO check if userId matches current user
             var newItem = await _itemManager.CreateStoreItemAsync(item);
+            item.Id = newItem.Id;
             return Ok(item);
         }
 

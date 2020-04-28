@@ -37,10 +37,16 @@ namespace Markit.Api.Repositories
             var result = await conn.QueryAsync<ItemEntity>(query, new {Upc = upc});
             return result.Single();
         }
-
-        public Task<ItemEntity> GetItemById(int id)
+        public async Task<StoreItemEntity> GetStoreItemById(int id)
         {
-            throw new NotImplementedException();
+            using var conn = connection;
+            var query =
+                @"SELECT Id, Upc, CreatedAt FROM items WHERE Id = @id";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<StoreItemEntity>(query, new {Id = id});
+            return result.Single();
         }
 
         public async Task<ItemEntity> CreateItem(Item item)
@@ -56,66 +62,37 @@ namespace Markit.Api.Repositories
             return result.Single();
         }
 
-        public async Task<StoreItemEntity> CreateStoreItem(StoreItem item)
+        public async Task<StoreItemEntity> CreateStoreItem(PostStoreItem item)
         {
             using var conn = connection;
+
+            var query = @"BEGIN; INSERT INTO items (Upc) VALUES (@Upc); 
+                INSERT INTO storeItems (ItemId, StoreId) VALUES (LAST_INSERT_ID(), @StoreId); 
+                INSERT INTO userPrices (StoreItemId, UserId, Price, IsSalePrice) VALUES (LAST_INSERT_ID(), @UserId, @Price, @IsSalePrice); 
+                INSERT INTO tags (Name) VALUES (@Tag); 
+                INSERT INTO itemTags (TagId, ItemId) VALUES (LAST_INSERT_ID(), (SELECT Id FROM items WHERE Upc = @Upc)); 
+                COMMIT;
+                SELECT * FROM storeItems WHERE Id = (SELECT Id from items WHERE Upc = @Upc);";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<StoreItemEntity>(query, item);
+            return result.Single();
+        }
+
+        public async Task<UserPriceEntity> GetUserPriceByItemId(int storeItemId)
+        {
+            using var conn = connection;
+            var query = @"SELECT * from userPrices where StoreItemId = @storeItemId";
             
             conn.Open();
 
-            using var transaction = conn.BeginTransaction();
-
-            try
+            var result = await conn.QueryAsync<UserPriceEntity>(query, new
             {
-                ItemEntity existingItem;
+                StoreItemId = storeItemId
+            });
 
-                try
-                {
-                    existingItem = await CreateItem(new Item {Upc = item.Upc});
-                }
-                catch
-                {
-                    existingItem = await GetItemByUpc(item.Upc);
-                }
-
-                List<TagEntity> tags = new List<TagEntity>();
-                
-                // TODO add a CreateTags method to tag repo and move iteration there
-                foreach (var t in item.Tags)
-                {
-                    try
-                    {
-                        var tag = await CreateTag(t, conn);
-                        tags.Add(tag);
-                    }
-                    catch
-                    {
-                        var tag = await GetTagByName(t, conn);
-                        tags.Add(tag);
-                    }
-                }
-                    
-
-                foreach (var t in tags)
-                {
-                    await InsertItemTag(existingItem.Id, t.Id, conn);
-                }
-
-                var store = await _storeRepository.GetStoreById(item.StoreId);
-                
-                //create userprice, TODO write function
-                var userPrice = await CreatUserPrice(item);
-                
-                //enter storeitem, TODO write function
-                var storeItemEntity = await InsertStoreItem(item);
-                transaction.Commit();
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw new Exception("Failed to save StoreItem.");
-            }
-            
-            return storeItemEntity;
+            return result.Single();
         }
 
         // TODO move to tag repo

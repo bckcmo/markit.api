@@ -5,6 +5,7 @@ namespace Markit.Api.Interfaces.Managers
 {
     public interface IItemManager
     {
-        Task<StoreItem> CreateStoreItemAsync(StoreItem item);
+        Task<StoreItem> CreateStoreItemAsync(PostStoreItem item);
+        Task<StoreItem> GetStoreItemByIdAsync(int id);
     }
 }

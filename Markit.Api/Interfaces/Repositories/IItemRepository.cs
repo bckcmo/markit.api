@@ -7,8 +7,9 @@ namespace Markit.Api.Interfaces.Repositories
     public interface IItemRepository
     {
         Task<ItemEntity> GetItemByUpc(string upc);
-        Task<ItemEntity> GetItemById(int id);
+        Task<StoreItemEntity> GetStoreItemById(int id);
         Task<ItemEntity> CreateItem(Item item);
-        Task<StoreItemEntity> CreateStoreItem(StoreItem item);
+        Task<StoreItemEntity> CreateStoreItem(PostStoreItem item);
+        Task<UserPriceEntity> GetUserPriceByItemId(int storeItemId);
     }
 }
