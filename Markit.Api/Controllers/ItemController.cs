@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
+using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -11,9 +13,12 @@ namespace Markit.Api.Controllers
     public class ItemController : Controller
     {
         private readonly IItemManager _itemManager;
-        public ItemController(IItemManager itemManager)
+        private readonly IHttpContextAccessor _httpContext;
+        
+        public ItemController(IItemManager itemManager, IHttpContextAccessor httpContext)
         {
             _itemManager = itemManager;
+            _httpContext = httpContext;
         }
         
         [AllowAnonymous]
@@ -27,7 +32,11 @@ namespace Markit.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(PostStoreItem item)
         {
-            // TODO check if userId matches current user
+            if (!_httpContext.IsUserAllowed(item.UserId))
+            {
+                return Unauthorized();
+            }
+            
             var newItem = await _itemManager.CreateStoreItemAsync(item);
             item.Id = newItem.Id;
             return Ok(item);
