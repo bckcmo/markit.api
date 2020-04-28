@@ -97,7 +97,9 @@ namespace Markit.Api
                 .AddSingleton<IDatabaseUtil, DatabaseUtil>()
                 .AddSingleton<IPasswordUtil, PasswordUtil>()
                 .AddSingleton<IStoreManager, StoreManager>()
-                .AddSingleton<IStoreRepository, StoreRepository>();
+                .AddSingleton<IStoreRepository, StoreRepository>()
+                .AddSingleton<IItemManager, ItemManager>()
+                .AddSingleton<IItemRepository, ItemRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

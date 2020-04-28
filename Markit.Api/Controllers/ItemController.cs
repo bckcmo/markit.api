@@ -1,25 +1,35 @@
-﻿using System;
+﻿using System.Threading.Tasks;
+using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
 {
+    [Authorize]
     [ApiController, Route("item")]
     public class ItemController : Controller
     {
-        [HttpGet("{itemId}")]
-        public IActionResult Get(int itemId)
+        private readonly IItemManager _itemManager;
+        public ItemController(IItemManager itemManager)
         {
-            return Ok(new Item
-            {
-                Id = itemId,
-                Upc = "839472834759",
-            });
+            _itemManager = itemManager;
+        }
+        
+        [AllowAnonymous]
+        [HttpGet("{itemId}")]
+        public async Task<IActionResult> Get(int itemId)
+        {
+            var item = await _itemManager.GetStoreItemByIdAsync(itemId);
+            return Ok(item);
         }
         
         [HttpPost]
-        public IActionResult Post(StoreItem item)
+        public async Task<IActionResult> Post(PostStoreItem item)
         {
+            // TODO check if userId matches current user
+            var newItem = await _itemManager.CreateStoreItemAsync(item);
+            item.Id = newItem.Id;
             return Ok(item);
         }
 
@@ -28,5 +38,7 @@ namespace Markit.Api.Controllers
         {
             return Ok();
         }
+        
+        // TODO add GET item/prices endpoint that gets most recent prices
     }
 }

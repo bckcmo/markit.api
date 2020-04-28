@@ -39,5 +39,7 @@ namespace Markit.Api.Controllers
                 }
             });
         }
+        
+        // TODO add get ratings endpoint that returns most recent ratings
     }
 }

@@ -59,5 +59,22 @@ namespace Markit.Api.Repositories
 
             return await conn.QueryAsync<StoreEntity>(query, new {lat, lon});
         }
+
+        public async Task<StoreEntity> GetStoreById(int id)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            return await GetStoreById(id, conn);
+        }
+        
+        public async Task<StoreEntity> GetStoreById(int id, IDbConnection conn)
+        {
+            var query = @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude FROM stores
+                WHERE Id = @id";
+
+            var store = await conn.QueryAsync<StoreEntity>(query, new {Id = id});
+            return store.Single();
+        }
     }
 }
