@@ -32,7 +32,7 @@ namespace Markit.Api.Managers
                Id = user.Id,
                FirstName = user.FirstName,
                LastName = user.LastName,
-               Email = user.Email,
+               UserName = user.UserName,
                Reputation = user.Reputation,
             };
         }
@@ -47,7 +47,7 @@ namespace Markit.Api.Managers
                 Id = userEntity.Id,
                 FirstName = userEntity.FirstName,
                 LastName = userEntity.LastName,
-                Email = userEntity.Email,
+                UserName = userEntity.UserName,
                 Reputation = userEntity.Reputation
             };
         }
@@ -66,7 +66,7 @@ namespace Markit.Api.Managers
                 Id = userEntity.Id,
                 FirstName = userEntity.FirstName,
                 LastName = userEntity.LastName,
-                Email = userEntity.Email,
+                UserName = userEntity.UserName,
                 Reputation = userEntity.Reputation
             };
         }
@@ -80,7 +80,7 @@ namespace Markit.Api.Managers
 
         public async Task<UserAuthResponse> GenerateToken(UserAuth authRequest)
         {
-            var user = await _userRepository.GetByEmail(authRequest.Email);
+            var user = await _userRepository.GetByUserName(authRequest.UserName);
             
             if (!_passwordUtil.Verify(user.Password, authRequest.Password))
             {
@@ -89,7 +89,7 @@ namespace Markit.Api.Managers
             
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
             };
 

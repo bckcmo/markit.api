@@ -24,7 +24,7 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> GetById(int id)
         {
             using var conn = connection;
-            var query = "SELECT Id, FirstName, LastName, Email, Reputation FROM users WHERE id = @id";
+            var query = "SELECT Id, FirstName, LastName, UserName, Reputation FROM users WHERE id = @id";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Id = id});
             return result;
@@ -34,7 +34,7 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var insertQuery =
-                @"INSERT into users (FirstName, LastName, Email, Password) Values (@FirstName, @LastName, @Email, @Password);
+                @"INSERT into users (FirstName, LastName, UserName, Password) Values (@FirstName, @LastName, @UserName, @Password);
                     SELECT * from users WHERE id = LAST_INSERT_ID()";
             
             conn.Open();
@@ -43,12 +43,12 @@ namespace Markit.Api.Repositories
             return result.Single();
         }
 
-        public async Task<UserEntity> GetByEmail(string email)
+        public async Task<UserEntity> GetByUserName(string userName)
         {
             using var conn = connection;
-            var query = "SELECT Id, FirstName, LastName, Email, Reputation, Password FROM users WHERE Email = @email";
+            var query = "SELECT Id, FirstName, LastName, UserName, Reputation, Password FROM users WHERE UserName = @userName";
             conn.Open();
-            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Email = email});
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {UserName = userName});
             return result;
         }
         
@@ -56,7 +56,7 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var query = @"UPDATE users SET Id = @Id, FirstName = @FirstName, LastName = @LastName, 
-            Email = @Email, Reputation = @Reputation WHERE Id = @Id";
+            UserName = @UserName, Reputation = @Reputation WHERE Id = @Id";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, user);
             return result;

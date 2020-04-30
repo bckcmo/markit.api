@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +9,12 @@ namespace Markit.Api.Controllers
      [ApiController, Route("list")]
      public class ListController : Controller
      {
+         private readonly IListManager _listManager;
+         public ListController(IListManager listManager)
+         {
+             _listManager = listManager;
+         }
+         
          [HttpGet("{listId}")]
          public IActionResult Get(int listId)
          { 
@@ -53,8 +61,9 @@ namespace Markit.Api.Controllers
          }
          
          [HttpPost]
-         public IActionResult Post(ShoppingList list)
+         public async Task<IActionResult> Post(ShoppingList list)
          {
+             var newList = _listManager.CreateShoppingList(list);
              return Ok(list);
          }
 

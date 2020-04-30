@@ -9,7 +9,7 @@ namespace Markit.Api.Interfaces.Repositories
     {
         Task<UserEntity> GetById(int id);
         Task<UserEntity> CreateUser(UserRegistration user);
-        Task<UserEntity> GetByEmail(string email);
+        Task<UserEntity> GetByUserName(string userName);
         Task<UserEntity> Update(User user);
         Task<UserEntity> Delete(int id);
     }

@@ -18,12 +18,10 @@ namespace Markit.Api.Repositories
         private readonly string _connectionString;
         
         private IDbConnection connection => new MySqlConnection(_connectionString);
-        private IStoreRepository _storeRepository;
 
-        public ItemRepository(IDatabaseUtil databaseUtil, IStoreRepository storeRepository)
+        public ItemRepository(IDatabaseUtil databaseUtil)
         {
             _connectionString = databaseUtil.GetConnectionString();
-            _storeRepository = storeRepository;
         }
         
         public async Task<ItemEntity> GetItemByUpc(string upc)
@@ -84,7 +82,7 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var query = @"SELECT * from userPrices where StoreItemId = @storeItemId";
-            
+
             conn.Open();
 
             var result = await conn.QueryAsync<UserPriceEntity>(query, new
@@ -92,38 +90,6 @@ namespace Markit.Api.Repositories
                 StoreItemId = storeItemId
             });
 
-            return result.Single();
-        }
-
-        // TODO move to tag repo
-        private async Task<TagEntity> CreateTag(string name, IDbConnection conn)
-        {
-            var insertQuery =
-                @"INSERT into tags (Name) Values (@name);
-                    SELECT * from tags WHERE id = LAST_INSERT_ID()";
-
-            var result = await conn.QueryAsync<TagEntity>(insertQuery, new {Name = name});
-            return result.Single();
-        }
-
-        // TODO move to tag repo
-        private async Task<TagEntity> GetTagByName(string name, IDbConnection conn)
-        {
-            var query = @"SELECT Id, Name, CreatedAt FROM tags where Name = @name";
-            
-            var result = await conn.QueryAsync<TagEntity>(query, new {Name = name});
-            return result.Single();
-        }
-
-        private async Task<ItemTagEntity> InsertItemTag(int itemId, int tagId, IDbConnection conn)
-        {
-            var query = @"INSERT INTO itemTags (ItemId, TagId) VALUES (@itemId, @tagId)";
-
-            var result = await conn.QueryAsync<ItemTagEntity>(query, new
-            {
-                ItemId = itemId,
-                TagId = tagId
-            });
             return result.Single();
         }
     }

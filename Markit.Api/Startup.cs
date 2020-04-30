@@ -37,6 +37,13 @@ namespace Markit.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(o => o.AddPolicy("AllowAll", builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -99,7 +106,11 @@ namespace Markit.Api
                 .AddSingleton<IStoreManager, StoreManager>()
                 .AddSingleton<IStoreRepository, StoreRepository>()
                 .AddSingleton<IItemManager, ItemManager>()
-                .AddSingleton<IItemRepository, ItemRepository>();
+                .AddSingleton<IItemRepository, ItemRepository>()
+                .AddSingleton<ITagManager, TagManager>()
+                .AddSingleton<ITagRepository, TagRepository>()
+                .AddSingleton<IListManager, ListManager>()
+                .AddSingleton<IListRepository, ListRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -109,6 +120,8 @@ namespace Markit.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseCors("AllowAll");
             
             app.UseAuthentication();
 
