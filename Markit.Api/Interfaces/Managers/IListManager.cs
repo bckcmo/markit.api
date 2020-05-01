@@ -5,6 +5,8 @@ namespace Markit.Api.Interfaces.Managers
 {
     public interface IListManager
     {
-        Task<ShoppingList> CreateShoppingList(ShoppingList list);
+        Task<ShoppingList> CreateShoppingList(PostList list);
+        Task<ShoppingList> GetListById(int listId);
+        Task<ShoppingList> AddListTagToList(int listId, ListTag tag);
     }
 }

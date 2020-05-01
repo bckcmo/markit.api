@@ -21,36 +21,43 @@ namespace Markit.Api.Repositories
             _connectionString = databaseUtil.GetConnectionString();
         }
         
-        public async Task<ShoppingListEntity> CreateShoppingList(ShoppingList list)
+        public async Task<ShoppingListEntity> CreateShoppingList(PostList list)
         {
             using var conn = connection;
             
             conn.Open();
 
-            var newList = await conn.QueryAsync<ShoppingListEntity>(
+            return await conn.QuerySingleAsync<ShoppingListEntity>(
                 @"INSERT INTO lists (UserId, Name, Description) VALUES (@UserId, @Name, @Description);
-                        SELECT * FROM lists WHERE Id = LAST_INSERT_ID()", new
-                {
-                    UserId = list.UserId,
-                    Name = list.Name,
-                    Description = list.Description
-                });
+                        SELECT * FROM lists WHERE Id = LAST_INSERT_ID()", list);
+        }
+
+        public async Task<ShoppingListEntity> GetListById(int id)
+        {
+            using var conn = connection;
+
+            conn.Open();
+
+            return await conn.QuerySingleAsync<ShoppingListEntity>(
+               @"SELECT * FROM lists WHERE Id = @id", new { id });
+        }
+
+        public async Task<ShoppingListEntity> AddTagToList(int listId, ListTag tag)
+        {
+            using var conn = connection;
             
-            var transaction = conn.BeginTransaction();
-            
-            var transformObject = list.ListTags.Select(t => new
+            conn.Open();
+
+            var query = @"INSERT INTO listtags (ListId, TagId, Quantity, Comment) VALUES (@ListId, @TagId, @Quantity, @Comment);
+                            SELECT * FROM lists WHERE Id = @ListId";
+
+            return await conn.QuerySingleAsync<ShoppingListEntity>(query, new
             {
-                ListId = newList.Single().Id,
-                Comment = t.Comment,
-                TagId = t.Tag.Id,
-                Quantity = t.Quantity
+                ListId = listId, 
+                TagId = tag.Tag.Id,
+                Quantity = tag.Quantity,
+                Comment = tag.Comment
             });
-            
-            await conn.ExecuteAsync(@"INSERT listtags(ListId, TagId, Quantity, Comment)
-                VALUES (@ListId, @TagId, @Quantity, @Comment)", transformObject, transaction);
-            
-            transaction.Commit();
-            return null;//result.Single();
         }
     }
 }

@@ -6,6 +6,8 @@ namespace Markit.Api.Interfaces.Repositories
 {
     public interface IListRepository
     {
-        Task<ShoppingListEntity> CreateShoppingList(ShoppingList list);
+        Task<ShoppingListEntity> CreateShoppingList(PostList list);
+        Task<ShoppingListEntity> GetListById(int listId);
+        Task<ShoppingListEntity> AddTagToList(int listId, ListTag tag);
     }
 }

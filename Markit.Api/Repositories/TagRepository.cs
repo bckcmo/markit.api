@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
+using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
 using MySql.Data.MySqlClient;
 
@@ -36,6 +37,30 @@ namespace Markit.Api.Repositories
             });
             
             return result;
+        }
+
+        public async Task<IEnumerable<ListTagEntity>> GetListTags(int listId)
+        {
+            using var conn = connection;
+            
+            var query = @"SELECT * FROM listtags where ListId = @listId";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<ListTagEntity>(query, new { listId });
+            return result;
+        }
+        
+        public async Task<TagEntity> GetTagById(int id)
+        {
+            using var conn = connection;
+            
+            var query = @"SELECT Id, Name, CreatedAt FROM tags where Id = @id";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<TagEntity>(query, new { id });
+            return result.Single();
         }
         
         private async Task<TagEntity> CreateTag(string name)
