@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Statics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +28,7 @@ namespace Markit.Api.Controllers
         public async Task<IActionResult> Get(int itemId)
         {
             var item = await _itemManager.GetStoreItemByIdAsync(itemId);
-            return Ok(item);
+            return Ok(new MarkitApiResponse {Data = item});
         }
         
         [HttpPost]
@@ -34,12 +36,16 @@ namespace Markit.Api.Controllers
         {
             if (!_httpContext.IsUserAllowed(item.UserId))
             {
-                return Unauthorized();
+                return Unauthorized(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.UserDenied }
+                });
             }
             
             var newItem = await _itemManager.CreateStoreItemAsync(item);
             item.Id = newItem.Id;
-            return Ok(item);
+            return Ok(new MarkitApiResponse { Data = item });
         }
 
         [HttpDelete("{itemId}")]

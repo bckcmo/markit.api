@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
+using Markit.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -18,7 +19,7 @@ namespace Markit.Api.Controllers
         {
             var tags = await _tagManager.QueryTagsAsync(tagQuery, 10);
             
-            return Ok(tags);
+            return Ok( new MarkitApiResponse { Data = tags });
         }
     }
 }

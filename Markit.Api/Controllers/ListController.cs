@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Statics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,10 +29,14 @@ namespace Markit.Api.Controllers
              
              if (!_httpContext.IsUserAllowed(list.UserId))
              {
-                 return Unauthorized();
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.UserDenied }
+                 });
              }
              
-             return Ok(list);
+             return Ok(new MarkitApiResponse { Data = list });
          }
          
          [HttpPost]
@@ -39,11 +44,15 @@ namespace Markit.Api.Controllers
          {
              if (!_httpContext.IsUserAllowed(list.UserId))
              {
-                 return Unauthorized();
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.UserDenied }
+                 });
              }
              
              var newList = await _listManager.CreateShoppingList(list);
-             return Ok(newList);
+             return Ok(new MarkitApiResponse { Data = newList });
          }
 
          [HttpPatch("{listId}")]
@@ -53,12 +62,16 @@ namespace Markit.Api.Controllers
              
              if (!_httpContext.IsUserAllowed(list.UserId))
              {
-                 return Unauthorized();
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.UserDenied }
+                 });
              }
              
              var updatedList = await _listManager.AddListTagToList(listId, tag);
 
-             return Ok(updatedList);
+             return Ok(new MarkitApiResponse { Data = updatedList });
          }
          
          [HttpDelete("{listId}")]
@@ -68,9 +81,10 @@ namespace Markit.Api.Controllers
          }
          
          [HttpDelete("{listId}/listTag/{listTagId}")]
-         public IActionResult DeleteListTag(string listId)
+         public async Task<IActionResult> DeleteListTag(int listId, int listTagId)
          {
-             return Ok();
+             await _listManager.DeleteListTagFromList(listId, listTagId);
+             return Ok(new MarkitApiResponse());
          }
      }
  }

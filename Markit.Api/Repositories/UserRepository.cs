@@ -55,8 +55,9 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> Update(User user)
         {
             using var conn = connection;
-            var query = @"UPDATE users SET Id = @Id, FirstName = @FirstName, LastName = @LastName, 
-            UserName = @UserName, Reputation = @Reputation WHERE Id = @Id";
+            var query = @"UPDATE users SET FirstName = @FirstName, LastName = @LastName, 
+                        UserName = @UserName, Reputation = @Reputation WHERE Id = @Id;
+                        SELECT * FROM users WHERE Id = @Id";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, user);
             return result;

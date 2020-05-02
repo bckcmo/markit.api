@@ -103,7 +103,9 @@ namespace Markit.Api
                 .AddSingleton<ITagManager, TagManager>()
                 .AddSingleton<ITagRepository, TagRepository>()
                 .AddSingleton<IListManager, ListManager>()
-                .AddSingleton<IListRepository, ListRepository>();
+                .AddSingleton<IListRepository, ListRepository>()
+                .AddSingleton<IRatingRepository, RatingRepository>()
+                .AddSingleton<IRatingsManager, RatingsManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

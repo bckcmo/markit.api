@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
@@ -40,6 +41,21 @@ namespace Markit.Api.Managers
         {
             var listEntity = await _listRepository.AddTagToList(listId, tag);
             return await BuildShoppingListFromEntity(listEntity, listId);
+        }
+
+        public async Task DeleteListTagFromList(int listId, int listTagId)
+        {
+            await _listRepository.DeleteListTagAsync(listId, listTagId);
+        }
+
+        public async Task<List<ShoppingList>> GetListsByUserId(int userId)
+        {
+            var listEntities = await _listRepository.GetListsByUserId(userId);
+            var lists = (await Task.WhenAll(
+                listEntities.Select(l => BuildShoppingListFromEntity(l, l.Id))))
+                .ToList();
+
+            return lists;
         }
 
         private async Task<ShoppingList> BuildShoppingListFromEntity(ShoppingListEntity entity, int listId)

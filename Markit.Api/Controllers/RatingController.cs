@@ -1,5 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Markit.Api.Extensions;
+using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Statics;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -7,39 +13,38 @@ namespace Markit.Api.Controllers
     [ApiController]
     public class RatingController : Controller
     {
+        private readonly IRatingsManager _ratingsManager;
+        private readonly IHttpContextAccessor _httpContext;
+
+        public RatingController(IRatingsManager ratingsManager, IHttpContextAccessor httpContext)
+        {
+            _ratingsManager = ratingsManager;
+            _httpContext = httpContext;
+        }
+        
+        [Authorize]
         [HttpPost("rating")]
-        public IActionResult Post(Rating rating)
+        public async Task<IActionResult> Post(Rating rating)
         {
-            return Ok(rating);
-        }
-        
-        [HttpGet("rating/query")]
-        public IActionResult Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
-        {
-            return Ok(new List<Rating>
+            if (!_httpContext.IsUserAllowed(rating.UserId))
             {
-                new Rating
+                return Unauthorized(new MarkitApiResponse
                 {
-                    Id = 1,
-                    Store = new Store
-                    {
-                       Id = 0,
-                       Name ="Food 'n Stuff",
-                       StreetAddress = "101 Main St.",
-                       City = "Pawnee",
-                       State = "IN",
-                       Coordinate = new Coordinate
-                       {
-                           Latitude = latitude,
-                           Longitude = longitude
-                       }
-                    },
-                    Comment = "Great store. It's where I get all my food. And most of my stuff.",
-                    Points = 5
-                }
-            });
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.UserDenied }
+                });
+            }
+            
+            var newRating = await _ratingsManager.CreateRating(rating);
+            
+            return Ok( new MarkitApiResponse { Data = newRating });
         }
         
-        // TODO add get ratings endpoint that returns most recent ratings
+        [HttpGet("ratings/query")]
+        public async Task<IActionResult> Query([FromQuery] decimal latitude, [FromQuery] decimal longitude)
+        {
+           var ratings = await _ratingsManager.QueryByCoordinatesAsync(latitude, longitude);
+           return Ok(new MarkitApiResponse { Data = ratings });
+        }
     }
 }

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,6 +9,7 @@ using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Entities;
 using Markit.Api.Models.Messages;
 using Microsoft.IdentityModel.Tokens;
 

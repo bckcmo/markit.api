@@ -20,13 +20,15 @@ namespace Markit.Api.Controllers
          [HttpGet("{storeId}")]
          public IActionResult Get(int storeId)
          {
-            return Ok(new Store
-            {
-               Id = storeId,
-               Name ="Food 'n Stuff",
-               StreetAddress = "101 Main St.",
-               City = "Pawnee",
-               State = "IN"
+            return Ok( new MarkitApiResponse {
+                Data = new Store
+                {
+                   Id = storeId,
+                   Name ="Food 'n Stuff",
+                   StreetAddress = "101 Main St.",
+                   City = "Pawnee",
+                   State = "IN"
+                }
             });
          }
          
@@ -34,7 +36,7 @@ namespace Markit.Api.Controllers
          public async Task<IActionResult> Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
          {
              var stores = await _storeManager.QueryByCoordinatesAsync(latitude, longitude);
-             return Ok(stores);
+             return Ok( new MarkitApiResponse { Data = stores });
          }
          
          [Authorize]
@@ -42,14 +44,14 @@ namespace Markit.Api.Controllers
          public async Task<IActionResult> Post(Store store)
          {
              var newStore = await _storeManager.CreateStoreAsync(store);
-             return Ok(newStore);
+             return Ok( new MarkitApiResponse { Data = newStore });
          }
          
          [Authorize]
          [HttpPut]
          public IActionResult Put(Store store)
          {
-             return Ok(store);
+             return Ok(new MarkitApiResponse { Data = store });
          }
          
          [Authorize]

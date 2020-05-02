@@ -4,6 +4,7 @@ using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Statics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,14 @@ namespace Markit.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserManager _userManager;
+        private readonly IListManager _listManager;
         private readonly IHttpContextAccessor _httpContext;
 
-        public UserController(IUserManager userManager, IHttpContextAccessor httpContext)
+        public UserController(IUserManager userManager, IListManager listManager, IHttpContextAccessor httpContext)
         {
             _userManager = userManager;
-            this._httpContext = httpContext;
+            _listManager = listManager;
+            _httpContext = httpContext;
         }
         
         [HttpGet("{userId}")]
@@ -28,17 +31,25 @@ namespace Markit.Api.Controllers
         {
             if (!_httpContext.IsUserAllowed(userId))
             {
-                return Unauthorized();
+                return Unauthorized(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.UserDenied }
+                });
             }
             
             var user = await _userManager.GetUserByIdAsync(userId);
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                });
             }
             
-            return Ok(user);
+            return Ok( new MarkitApiResponse{ Data = user });
         }
         
         [AllowAnonymous]
@@ -46,7 +57,7 @@ namespace Markit.Api.Controllers
         public async Task<IActionResult> Post(UserRegistration user)
         {
             var newUser = await _userManager.CreateUserAsync(user);
-            return Ok(newUser);
+            return Ok( new MarkitApiResponse { Data = newUser });
         }
 
         [HttpPut]
@@ -54,122 +65,54 @@ namespace Markit.Api.Controllers
         {
             if (!_httpContext.IsUserAllowed(user.Id))
             {
-                return Unauthorized();
+                return Unauthorized(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.UserDenied }
+                });
             }
             
             var userResponse = await _userManager.UpdateUserAsync(user);
 
             if (user.Id == 0)
             {
-                return NotFound();
+                return NotFound(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                });
             }
             
-            return Ok(userResponse);
+            return Ok( new MarkitApiResponse { Data = userResponse });
         }
-        
-        [HttpDelete]
-        public IActionResult Delete(int id)
+
+        [HttpDelete ("{userId}")]
+        public IActionResult Delete(int userId)
         {
             return Ok();
         }
         
         [HttpGet("{userId}/lists")]
-        public IActionResult GetAll(int userId)
+        public async Task<IActionResult> GetAll(int userId)
         {
-            return Ok(new UserShoppingLists
+            if (!_httpContext.IsUserAllowed(userId))
             {
-                UserId = userId,
-                Lists = new List<ShoppingList>
+                return Unauthorized(new MarkitApiResponse
                 {
-                    new ShoppingList
-                    {
-                        Id = 1,
-                        Name = "Test List",
-                        Description = "This is a hardcoded list",
-                        ListTags = new List<ListTag>
-                        {
-                            new ListTag
-                            {
-                                Id = 0,
-                                Tag = new Tag
-                                {
-                                  Id = 0,
-                                  Name = "Cat food"
-                                },
-                                Quantity = 1,
-                                Comment = "Meow Meow"
-                            },
-                            new ListTag
-                            {
-                                Id = 1,
-                                Tag = new Tag
-                                {
-                                    Id = 20,
-                                    Name = "Doritos"
-                                },
-                                Quantity = 1,
-                            },
-                            new ListTag
-                            {
-                                Id = 2,
-                                Tag = new Tag
-                                {
-                                    Id = 6,
-                                    Name = "Bread"
-                                },
-                                Quantity = 1,
-                            }
-                        },
-                    },
-                    new ShoppingList
-                    {
-                        Id = 1,
-                        Name = "Test List 2",
-                        Description = "This is also a hardcoded list",
-                        ListTags = new List<ListTag>
-                        {
-                            new ListTag
-                            {
-                                Id = 0,
-                                Tag = new Tag
-                                {
-                                    Id = 0,
-                                    Name = "Dog food"
-                                },
-                                Quantity = 1,
-                                Comment = "Woof Woof"
-                            },
-                            new ListTag
-                            {
-                                Id = 1,
-                                Tag = new Tag
-                                {
-                                    Id = 20,
-                                    Name = "Cheese"
-                                },
-                                Quantity = 2,
-                                Comment = "Get colby jack and cheddar"
-                            },
-                            new ListTag
-                            {
-                                Id = 2,
-                                Tag = new Tag
-                                {
-                                    Id = 6,
-                                    Name = "Milk"
-                                },
-                                Quantity = 1,
-                            }
-                        }
-                    }
-                }
-            });
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.UserDenied }
+                });
+            }
+
+            var lists = await _listManager.GetListsByUserId(userId);
+            
+            return Ok( new MarkitApiResponse { Data = lists });
         }
         
         [HttpGet("{userId}/list/{listId}/analyze")]
         public IActionResult Get(int userId, int listId)
         {
-            return Ok(new ListAnalysis
+            return Ok( new MarkitApiResponse { Data = new ListAnalysis
             {
                 Rankings = new List<StoreAnalysis>
                 {
@@ -204,7 +147,7 @@ namespace Markit.Api.Controllers
                         PriceAndStalenessRank = 1
                     }
                 }
-            });
+            }});
         }
 
         [AllowAnonymous]
@@ -212,7 +155,7 @@ namespace Markit.Api.Controllers
         public async Task<IActionResult> Post(UserAuth authRequest)
         {
             var token = await _userManager.GenerateToken(authRequest);
-            return Ok(token);
+            return Ok(new MarkitApiResponse { Data = token });
         }
     }
 }
