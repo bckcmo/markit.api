@@ -69,17 +69,13 @@ namespace Markit.Api.Repositories
                 INSERT IGNORE INTO storeItems (ItemId, StoreId) VALUES ((SELECT Id FROM items WHERE Upc = @Upc), @StoreId); 
                 INSERT INTO userPrices (StoreItemId, UserId, Price, IsSalePrice) VALUES (
                 (SELECT Id FROM storeItems WHERE StoreId = @StoreId and ItemId = 
-                (SELECT Id FROM items WHERE Upc = @Upc)), @UserId, @Price, @IsSalePrice); 
-                INSERT INTO tags (Name) VALUES (@Tag); 
-                INSERT INTO itemTags (TagId, ItemId) VALUES (LAST_INSERT_ID(), (SELECT Id FROM items WHERE Upc = @Upc)); 
-                COMMIT;
+                (SELECT Id FROM items WHERE Upc = @Upc)), @UserId, @Price, @IsSalePrice);
+                COMMIT; 
                 SELECT * FROM storeItems WHERE ItemId = (SELECT Id from items WHERE Upc = @Upc);";
             
-            conn.Open();
-            
-            var result = await conn.QueryAsync<StoreItemEntity>(updateQuery, item);
-            
-            return result.Single();
+            var result = await conn.QuerySingleAsync<StoreItemEntity>(updateQuery, item);
+            await Task.WhenAll(item.Tags.Select( t => AddTags(t, item.Upc)));
+            return result;
         }
 
         public async Task<UserPriceEntity> GetUserPriceByItemId(int storeItemId)
@@ -95,6 +91,26 @@ namespace Markit.Api.Repositories
             });
 
             return result.Single();
+        }
+
+        private async Task<TagEntity> AddTags(string tag, string upc)
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            var query = @"INSERT IGNORE INTO tags (Name) VALUES (@Tag);
+                            INSERT IGNORE INTO itemTags (TagId, ItemId) VALUES (LAST_INSERT_ID(), 
+                            (SELECT Id from items WHERE Upc = @Upc))";
+    
+            var result = new TagEntity();
+            try
+            {
+                result = await conn.QuerySingleAsync<TagEntity>(query, new {Tag = tag, Upc = upc});
+            }
+            catch
+            {
+                // noop
+            }
+
+            return result;
         }
     }
 }

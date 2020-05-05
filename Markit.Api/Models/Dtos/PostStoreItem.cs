@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Markit.Api.Models.Dtos
 {
     public class PostStoreItem
@@ -8,6 +10,6 @@ namespace Markit.Api.Models.Dtos
         public string Upc { get; set; }
         public decimal Price { get; set; }
         public bool IsSalePrice { get; set; }
-        public string Tag { get; set; }
+        public List<string> Tags { get; set; }
     }
 }
