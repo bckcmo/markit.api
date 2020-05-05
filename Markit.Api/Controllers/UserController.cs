@@ -52,6 +52,23 @@ namespace Markit.Api.Controllers
             return Ok( new MarkitApiResponse{ Data = user });
         }
         
+        [HttpGet("currentUser")]
+        public async Task<IActionResult> Get()
+        {
+            var user = await _userManager.GetUserByIdAsync(_httpContext.GetCurrentUserId());
+
+            if (user == null)
+            {
+                return NotFound(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                });
+            }
+            
+            return Ok( new MarkitApiResponse{ Data = user });
+        }
+        
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Post(UserRegistration user)

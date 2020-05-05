@@ -19,7 +19,7 @@ namespace Markit.Api.Managers
         public async Task<StoreItem> CreateStoreItemAsync(PostStoreItem item)
         {
             var newItem = await _itemRepository.CreateStoreItem(item);
-   
+            
             return new StoreItem
             {
                 Id = newItem.Id,

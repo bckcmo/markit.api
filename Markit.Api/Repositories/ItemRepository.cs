@@ -32,9 +32,10 @@ namespace Markit.Api.Repositories
             
             conn.Open();
             
-            var result = await conn.QueryAsync<ItemEntity>(query, new {Upc = upc});
-            return result.Single();
+            var result = await conn.QuerySingleAsync<ItemEntity>(query, new {Upc = upc});
+            return result;
         }
+        
         public async Task<StoreItemEntity> GetStoreItemById(int id)
         {
             using var conn = connection;
@@ -63,18 +64,21 @@ namespace Markit.Api.Repositories
         public async Task<StoreItemEntity> CreateStoreItem(PostStoreItem item)
         {
             using var conn = connection;
-
-            var query = @"BEGIN; INSERT INTO items (Upc) VALUES (@Upc); 
-                INSERT INTO storeItems (ItemId, StoreId) VALUES (LAST_INSERT_ID(), @StoreId); 
-                INSERT INTO userPrices (StoreItemId, UserId, Price, IsSalePrice) VALUES (LAST_INSERT_ID(), @UserId, @Price, @IsSalePrice); 
+            var updateQuery = @"BEGIN;
+                INSERT IGNORE INTO items (Upc) VALUES (@Upc); 
+                INSERT IGNORE INTO storeItems (ItemId, StoreId) VALUES ((SELECT Id FROM items WHERE Upc = @Upc), @StoreId); 
+                INSERT INTO userPrices (StoreItemId, UserId, Price, IsSalePrice) VALUES (
+                (SELECT Id FROM storeItems WHERE StoreId = @StoreId and ItemId = 
+                (SELECT Id FROM items WHERE Upc = @Upc)), @UserId, @Price, @IsSalePrice); 
                 INSERT INTO tags (Name) VALUES (@Tag); 
                 INSERT INTO itemTags (TagId, ItemId) VALUES (LAST_INSERT_ID(), (SELECT Id FROM items WHERE Upc = @Upc)); 
                 COMMIT;
-                SELECT * FROM storeItems WHERE Id = (SELECT Id from items WHERE Upc = @Upc);";
+                SELECT * FROM storeItems WHERE ItemId = (SELECT Id from items WHERE Upc = @Upc);";
             
             conn.Open();
             
-            var result = await conn.QueryAsync<StoreItemEntity>(query, item);
+            var result = await conn.QueryAsync<StoreItemEntity>(updateQuery, item);
+            
             return result.Single();
         }
 
