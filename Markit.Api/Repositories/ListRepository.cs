@@ -71,8 +71,38 @@ namespace Markit.Api.Repositories
                 Comment = tag.Comment
             });
         }
+
+        public async Task<ListTagEntity> CreateListTag(int listId, ListTag listTag)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+
+            var query = @"INSERT INTO listTags (ListId, TagId, Quantity, Comment) 
+                        VALUES (@ListId, @TagId, @Quantity, @Comment);
+                        SELECT * FROM listTags WHERE Id = LAST_INSERT_ID()";
+
+            return await conn.QuerySingleAsync<ListTagEntity>(query, new
+            {
+                TagId = listTag.Tag.Id,
+                ListId = listId,
+                listTag.Quantity,
+                listTag.Comment
+            });
+        }
         
-        public async Task<ListTagEntity> UpdateListTag(int listId, int listTagId, ListTag tag)
+        public async Task<ListTagEntity> GetListTag(int listTagId)
+        {
+            using var conn = connection;
+            
+            var query = @"SELECT * FROM listtags where Id = @listTagId";
+            
+            conn.Open();
+            
+            return await conn.QuerySingleAsync<ListTagEntity>(query, new { listTagId });
+        }
+        
+        public async Task<ListTagEntity> UpdateListTag(int listId, int listTagId, ListTag listTag)
         {
             using var conn = connection;
             
@@ -81,17 +111,17 @@ namespace Markit.Api.Repositories
             var existingListTag =
                 await conn.QuerySingleAsync<ListTagEntity>(@"SELECT * FROM ListTags WHERE Id = @listTagId", new { listTagId });
 
-            tag.Comment ??= existingListTag.Comment;
-            tag.Quantity ??= existingListTag.Quantity;
+            listTag.Comment ??= existingListTag.Comment;
+            listTag.Quantity ??= existingListTag.Quantity;
             
             var query = @"UPDATE listtags SET Quantity = @Quantity, Comment = @Comment
-                        WHERE Id = @Id; SELECT * FROM ListTags WHERE Id = @Id";
+                        WHERE Id = @Id; SELECT * FROM listtags WHERE Id = @Id";
 
             return await conn.QuerySingleAsync<ListTagEntity>(query, new
             {
                 Id = listTagId,
-                Quantity = tag.Quantity,
-                Comment = tag.Comment
+                Quantity = listTag.Quantity,
+                Comment = listTag.Comment
             });
         }
 

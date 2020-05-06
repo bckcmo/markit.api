@@ -58,22 +58,20 @@ namespace Markit.Api.Managers
             return lists;
         }
 
-        public async Task<ListTag> UpdateListTag(int listId, int listTagId, ListTag tag)
+        public async Task<ListTag>CreateListTag(int listId, ListTag listTag)
         {
-            var updatedTag = await _listRepository.UpdateListTag(listId, listTagId, tag);
-            var tagEntity = await _tagRepository.GetTagById(updatedTag.Id);
-            
-            return new ListTag
-            {
-                Id = updatedTag.Id,
-                Tag = new Tag
-                {
-                    Id = updatedTag.TagId,
-                    Name = tagEntity.Name
-                },
-                Quantity = updatedTag.Quantity,
-                Comment = updatedTag.Comment
-            };
+            var tagEntity = await _tagRepository.GetTagById(listTag.Tag.Id);
+            var newListTag = await _listRepository.CreateListTag(listId, listTag);
+            return BuildListTagFromEntity(newListTag, tagEntity);
+        }
+        
+        public async Task<ListTag> UpdateListTag(int listId, int listTagId, ListTag listTag)
+        {
+            //TODO wrap in custom exception and handle error if tag doesn't exist
+            var listTagEntity = await _listRepository.GetListTag(listTagId);
+            var updatedListTag = await _listRepository.UpdateListTag(listId, listTagId, listTag);
+            var tagEntity = await _tagRepository.GetTagById(updatedListTag.TagId);
+            return BuildListTagFromEntity(updatedListTag, tagEntity);
         }
 
         public async Task<ShoppingList> UpdateList(int listId, PostList list)
@@ -110,6 +108,21 @@ namespace Markit.Api.Managers
                 Name = entity.Name,
                 Description = entity.Description,
                 ListTags = listTags
+            };
+        }
+
+        private ListTag BuildListTagFromEntity(ListTagEntity listTagEntity, TagEntity tagEntity)
+        {
+            return new ListTag
+            {
+                Id = listTagEntity.Id,
+                Tag = new Tag
+                {
+                    Id = listTagEntity.TagId,
+                    Name = tagEntity.Name
+                },
+                Quantity = listTagEntity.Quantity,
+                Comment = listTagEntity.Comment
             };
         }
     }

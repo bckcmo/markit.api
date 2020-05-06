@@ -76,7 +76,7 @@ namespace Markit.Api.Controllers
          }
          
          [HttpPatch("{listId}/listTag/{listTagId}")]
-         public async Task<IActionResult> Patch(int listId, int listTagId, ListTag tag)
+         public async Task<IActionResult> PatchListTag(int listId, int listTagId, ListTag listTag)
          {
              var list = await _listManager.GetListById(listId);
              
@@ -89,9 +89,29 @@ namespace Markit.Api.Controllers
                  });
              }
              
-             var updatedListTag = await _listManager.UpdateListTag(listId, listTagId, tag);
+             var updatedListTag = await _listManager.UpdateListTag(listId, listTagId, listTag);
 
              return Ok(new MarkitApiResponse { Data = updatedListTag });
+         }
+         
+         
+         [HttpPost("{listId}/listTag")]
+         public async Task<IActionResult> PostListTag(int listId, ListTag listTag)
+         {
+             var list = await _listManager.GetListById(listId);
+             
+             if (!_httpContext.IsUserAllowed(list.UserId))
+             {
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.UserDenied }
+                 });
+             }
+             
+             var newListTag = await _listManager.CreateListTag(listId, listTag);
+
+             return Ok(new MarkitApiResponse { Data = newListTag });
          }
          
          [HttpDelete("{listId}")]

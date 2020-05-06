@@ -12,7 +12,9 @@ namespace Markit.Api.Interfaces.Repositories
         Task<ShoppingListEntity> AddTagToList(int listId, ListTag tag);
         Task DeleteListTagAsync(int listId, int listTagId);
         Task<List<ShoppingListEntity>> GetListsByUserId(int id);
-        Task<ListTagEntity> UpdateListTag(int listId, int listTagId, ListTag tag);
+        Task<ListTagEntity> UpdateListTag(int listId, int listTagId, ListTag listTag);
         Task<ShoppingListEntity> UpdateList(int listId, PostList list);
+        Task<ListTagEntity> CreateListTag(int listId, ListTag listTag);
+        Task<ListTagEntity> GetListTag(int listTagId);
     }
 }

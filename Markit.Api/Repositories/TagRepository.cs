@@ -58,6 +58,7 @@ namespace Markit.Api.Repositories
             return nameTags.Union(upcTags).Distinct(new TagEntityCompare());
         }
 
+        //TODO move to list repo
         public async Task<IEnumerable<ListTagEntity>> GetListTags(int listId)
         {
             using var conn = connection;
