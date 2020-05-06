@@ -7,7 +7,7 @@ namespace Markit.Api.Interfaces.Repositories
 {
     public interface ITagRepository
     {
-        Task<IEnumerable<TagEntity>> QueryTags(string tag, int limit);
+        Task<IEnumerable<TagEntity>> QueryTags(string name, string upc, int limit);
         Task<IEnumerable<ListTagEntity>> GetListTags(int listId);
         Task<TagEntity> GetTagById(int id);
     }

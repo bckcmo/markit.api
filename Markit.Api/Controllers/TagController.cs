@@ -15,9 +15,9 @@ namespace Markit.Api.Controllers
         }
         
         [HttpGet("query")]
-        public async Task<IActionResult> Query([FromQuery] string tagQuery)
+        public async Task<IActionResult> Query([FromQuery] string name, [FromQuery] string upc)
         {
-            var tags = await _tagManager.QueryTagsAsync(tagQuery, 10);
+            var tags = await _tagManager.QueryTagsAsync(name, upc, 10);
             
             return Ok( new MarkitApiResponse { Data = tags });
         }

@@ -16,9 +16,9 @@ namespace Markit.Api.Managers
             _tagRepository = tagRepository;
         }
 
-        public async Task<IList<Tag>> QueryTagsAsync(string tag, int limit)
+        public async Task<IList<Tag>> QueryTagsAsync(string tag, string upc, int limit)
         {
-            var tags = await _tagRepository.QueryTags(tag, limit);
+            var tags = await _tagRepository.QueryTags(tag, upc, limit);
             
             return tags.Select(t => new Tag
             {

@@ -6,6 +6,6 @@ namespace Markit.Api.Interfaces.Managers
 {
     public interface ITagManager
     {
-        Task<IList<Tag>> QueryTagsAsync(string tag, int limit);
+        Task<IList<Tag>> QueryTagsAsync(string tag, string upc, int limit);
     }
 }

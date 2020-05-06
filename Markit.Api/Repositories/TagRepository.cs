@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Markit.Api.Comparers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
 using Markit.Api.Models.Dtos;
@@ -22,21 +23,39 @@ namespace Markit.Api.Repositories
             _connectionString = databaseUtil.GetConnectionString();
         }
 
-        public async Task<IEnumerable<TagEntity>> QueryTags(string tag, int limit)
+        public async Task<IEnumerable<TagEntity>> QueryTags(string name, string upc, int limit)
         {
             using var conn = connection;
-            
-            var query = @"SELECT Id, Name, CreatedAt FROM tags where Name LIKE @term LIMIT @limit";
-            
+
             conn.Open();
+
+            IEnumerable<TagEntity> nameTags = new List<TagEntity>();
+            IEnumerable<TagEntity> upcTags = new List<TagEntity>();
             
-            var result = await conn.QueryAsync<TagEntity>(query, new
+            if(name != null)
             {
-                term = $"{tag}%", 
-                limit
-            });
+                var nameQuery = @"SELECT Id, Name, CreatedAt FROM tags where Name LIKE @term LIMIT @limit";
+                nameTags = await conn.QueryAsync<TagEntity>(nameQuery, new
+                {
+                    term = $"{name}%", 
+                    limit
+                });
+            }
+
+            if (upc != null)
+            {
+                var upcQuery = @"SELECT tags.Id, tags.Name, tags.CreatedAt FROM tags 
+                JOIN itemTags ON itemTags.TagId = tags.Id
+                JOIN items ON items.Id = itemTags.ItemId
+                where items.Upc LIKE @term LIMIT @limit";
+                upcTags = await conn.QueryAsync<TagEntity>(upcQuery, new
+                {
+                    term = $"{upc}%", 
+                    limit
+                });
+            }
             
-            return result;
+            return nameTags.Union(upcTags).Distinct(new TagEntityCompare());
         }
 
         public async Task<IEnumerable<ListTagEntity>> GetListTags(int listId)
