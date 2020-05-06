@@ -71,6 +71,51 @@ namespace Markit.Api.Repositories
                 Comment = tag.Comment
             });
         }
+        
+        public async Task<ListTagEntity> UpdateListTag(int listId, int listTagId, ListTag tag)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+
+            var existingListTag =
+                await conn.QuerySingleAsync<ListTagEntity>(@"SELECT * FROM ListTags WHERE Id = @listTagId", new { listTagId });
+
+            tag.Comment ??= existingListTag.Comment;
+            tag.Quantity ??= existingListTag.Quantity;
+            
+            var query = @"UPDATE listtags SET Quantity = @Quantity, Comment = @Comment
+                        WHERE Id = @Id; SELECT * FROM ListTags WHERE Id = @Id";
+
+            return await conn.QuerySingleAsync<ListTagEntity>(query, new
+            {
+                Id = listTagId,
+                Quantity = tag.Quantity,
+                Comment = tag.Comment
+            });
+        }
+
+        public async Task<ShoppingListEntity> UpdateList(int listId, PostList list)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+
+            var existingList = await conn.QuerySingleAsync<ShoppingListEntity>(
+                @"SELECT * FROM lists WHERE Id = @listId", new { listId });
+
+            list.Description ??= existingList.Description;
+            list.Name ??= existingList.Name;
+
+            return await conn.QuerySingleAsync<ShoppingListEntity>(
+                @"UPDATE lists SET Name = @Name, Description = @Description WHERE Id = @ListId;
+                        SELECT * FROM lists WHERE Id = @ListId", new
+                {
+                    ListId = listId,
+                    list.Name,
+                    list.Description
+                });
+        }
 
         public async Task DeleteListTagAsync(int listId, int listTagId)
         {

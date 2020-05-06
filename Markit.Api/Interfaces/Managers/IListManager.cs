@@ -11,5 +11,7 @@ namespace Markit.Api.Interfaces.Managers
         Task<List<ShoppingList>> GetListsByUserId(int userId);
         Task<ShoppingList> AddListTagToList(int listId, ListTag tag);
         Task DeleteListTagFromList(int listId, int listTagId);
+        Task<ListTag> UpdateListTag(int listId, int listTagId, ListTag tag);
+        Task<ShoppingList> UpdateList(int listId, PostList list);
     }
 }

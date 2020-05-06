@@ -58,6 +58,30 @@ namespace Markit.Api.Managers
             return lists;
         }
 
+        public async Task<ListTag> UpdateListTag(int listId, int listTagId, ListTag tag)
+        {
+            var updatedTag = await _listRepository.UpdateListTag(listId, listTagId, tag);
+            var tagEntity = await _tagRepository.GetTagById(updatedTag.Id);
+            
+            return new ListTag
+            {
+                Id = updatedTag.Id,
+                Tag = new Tag
+                {
+                    Id = updatedTag.TagId,
+                    Name = tagEntity.Name
+                },
+                Quantity = updatedTag.Quantity,
+                Comment = updatedTag.Comment
+            };
+        }
+
+        public async Task<ShoppingList> UpdateList(int listId, PostList list)
+        {
+            var updatedList = await _listRepository.UpdateList(listId, list);
+            return await BuildShoppingListFromEntity(updatedList, listId);
+        }
+
         private async Task<ShoppingList> BuildShoppingListFromEntity(ShoppingListEntity entity, int listId)
         {
             var listTagEntities = await _tagRepository.GetListTags(listId);
