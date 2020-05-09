@@ -18,7 +18,7 @@ namespace Markit.Api.Managers
             _listRepository = listRepository;
             _tagRepository = tagRepository;
         }
-        public async Task<ShoppingList> CreateShoppingList(PostList list)
+        public async Task<ShoppingList> CreateList(PostList list)
         {
             var newList = await _listRepository.CreateShoppingList(list);
             
@@ -29,6 +29,11 @@ namespace Markit.Api.Managers
                 Description = list.Description,
                 Name = list.Name
             };
+        }
+
+        public async Task DeleteList(int id)
+        {
+            await _listRepository.DeleteList(id);
         }
 
         public async Task<ShoppingList> GetListById(int listId)

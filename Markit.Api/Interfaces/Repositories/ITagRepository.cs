@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
 
 namespace Markit.Api.Interfaces.Repositories
@@ -10,5 +9,7 @@ namespace Markit.Api.Interfaces.Repositories
         Task<IEnumerable<TagEntity>> QueryTags(string name, string upc, int limit);
         Task<IEnumerable<ListTagEntity>> GetListTags(int listId);
         Task<TagEntity> GetTagById(int id);
+        Task<List<TagEntity>> GetTagsByItemId(int itemId);
+        Task<List<TagEntity>> GetTagsByItemUpc(string upc);
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,10 +25,19 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> GetById(int id)
         {
             using var conn = connection;
-            var query = "SELECT Id, FirstName, LastName, UserName, Reputation FROM users WHERE id = @id";
+            var query = "SELECT * FROM users WHERE id = @id";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Id = id});
             return result;
+        }
+
+        public async Task<List<UserEntity>> GetByIds(List<int> ids)
+        {
+            using var conn = connection;
+            var query = "SELECT * FROM users WHERE Id IN @ids";
+            conn.Open();
+            var result = await conn.QueryAsync<UserEntity>(query, new { ids });
+            return result.ToList();
         }
 
         public async Task<UserEntity> CreateUser(UserRegistration user)
@@ -46,7 +56,7 @@ namespace Markit.Api.Repositories
         public async Task<UserEntity> GetByUserName(string userName)
         {
             using var conn = connection;
-            var query = "SELECT Id, FirstName, LastName, UserName, Reputation, Password FROM users WHERE UserName = @userName";
+            var query = "SELECT * FROM users WHERE UserName = @userName";
             conn.Open();
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {UserName = userName});
             return result;

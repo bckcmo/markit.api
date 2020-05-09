@@ -24,19 +24,7 @@ namespace Markit.Api.Repositories
             _connectionString = databaseUtil.GetConnectionString();
         }
         
-        public async Task<ItemEntity> GetItemByUpc(string upc)
-        {
-            using var conn = connection;
-            var query =
-                @"SELECT Id, Upc, CreatedAt FROM items WHERE Upc = @upc";
-            
-            conn.Open();
-            
-            var result = await conn.QuerySingleAsync<ItemEntity>(query, new {Upc = upc});
-            return result;
-        }
-        
-        public async Task<StoreItemEntity> GetStoreItemById(int id)
+        public async Task<ItemEntity> GetItemById(int id)
         {
             using var conn = connection;
             var query =
@@ -44,7 +32,31 @@ namespace Markit.Api.Repositories
             
             conn.Open();
             
-            var result = await conn.QueryAsync<StoreItemEntity>(query, new {Id = id});
+            var result = await conn.QuerySingleAsync<ItemEntity>(query, new { id });
+            return result;
+        }
+        
+        public async Task<StoreItemEntity> GetStoreItemById(int id)
+        {
+            using var conn = connection;
+            var query =
+                @"SELECT * FROM storeitems WHERE Id = @id";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<StoreItemEntity>(query, new { id });
+            return result.Single();
+        }
+        
+        public async Task<StoreItemEntity> GetStoreItemByItemId(int id)
+        {
+            using var conn = connection;
+            var query =
+                @"SELECT * FROM storeitems WHERE ItemId = @id";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<StoreItemEntity>(query, new { id });
             return result.Single();
         }
 
@@ -59,6 +71,14 @@ namespace Markit.Api.Repositories
             
             var result = await conn.QueryAsync<ItemEntity>(insertQuery, item);
             return result.Single();
+        }
+
+        public async Task DeleteItemById(int id)
+        {
+            using var conn = connection;
+            var query = @"DELETE FROM items WHERE Id = @id;";
+            conn.Open();
+            var result = await conn.ExecuteAsync(query, new { id });
         }
 
         public async Task<StoreItemEntity> CreateStoreItem(PostStoreItem item)
@@ -78,7 +98,7 @@ namespace Markit.Api.Repositories
             return result;
         }
 
-        public async Task<UserPriceEntity> GetUserPriceByItemId(int storeItemId)
+        public async Task<List<UserPriceEntity>> GetUserPricesByItemId(int storeItemId)
         {
             using var conn = connection;
             var query = @"SELECT * from userPrices where StoreItemId = @storeItemId";
@@ -90,7 +110,20 @@ namespace Markit.Api.Repositories
                 StoreItemId = storeItemId
             });
 
-            return result.Single();
+            return result.ToList();
+        }
+
+        public async Task<List<UserPriceEntity>> GetUserPricesByStoreItemIds(List<int> storeItemIds)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+            
+            var query = @"SELECT * FROM userprices WHERE StoreItemId IN @storeItemIds ORDER BY CreatedAt DESC LIMIT 20";
+            
+            var results = await conn.QueryAsync<UserPriceEntity>(query, new { storeItemIds });
+
+            return results.ToList();
         }
 
         private async Task<TagEntity> AddTags(string tag, string upc)

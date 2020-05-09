@@ -54,5 +54,50 @@ namespace Markit.Api.Managers
                 }
             });
         }
+
+        public async Task<Store> GetById(int id)
+        {
+            var storeEntity = await _storeRepository.GetStoreById(id);
+
+            return new Store
+            {
+                Id = storeEntity.Id,
+                Name = storeEntity.Name,
+                StreetAddress = storeEntity.StreetAddress,
+                City = storeEntity.City,
+                State = storeEntity.State,
+                PostalCode = storeEntity.PostalCode,
+                Coordinate = new Coordinate
+                {
+                    Latitude = storeEntity.Latitude,
+                    Longitude = storeEntity.Longitude
+                }
+            };
+        }
+
+        public async Task<Store> PutStore(Store store)
+        {
+            var storeEntity = await _storeRepository.ReplaceStore(store);
+
+            return new Store
+            {
+                Id = storeEntity.Id,
+                Name = storeEntity.Name,
+                StreetAddress = storeEntity.StreetAddress,
+                City = storeEntity.City,
+                State = storeEntity.State,
+                PostalCode = storeEntity.PostalCode,
+                Coordinate = new Coordinate
+                {
+                    Latitude = storeEntity.Latitude,
+                    Longitude = storeEntity.Longitude
+                }
+            };
+        }
+
+        public async Task Delete(int id)
+        {
+            await _storeRepository.DeleteStoreById(id);
+        }
     }
 }

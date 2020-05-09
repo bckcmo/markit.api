@@ -6,7 +6,6 @@ using Dapper;
 using Markit.Api.Comparers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
-using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
 using MySql.Data.MySqlClient;
 
@@ -82,6 +81,35 @@ namespace Markit.Api.Repositories
             var result = await conn.QueryAsync<TagEntity>(query, new { id });
             return result.Single();
         }
+
+        public async Task<List<TagEntity>> GetTagsByItemId(int itemId)
+        {
+            using var conn = connection;
+            
+            var query = @"SELECT tags.Id, tags.Name, tags.CreatedAt FROM tags 
+                        JOIN itemtags ON itemtags.itemId = tags.Id where itemtags.itemId = @itemId";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<TagEntity>(query, new { itemID = itemId });
+            return result.ToList();
+        }
+        
+        public async Task<List<TagEntity>> GetTagsByItemUpc(string upc)
+        {
+            using var conn = connection;
+            
+            var query = @"SELECT tags.Id, tags.Name, tags.CreatedAt FROM tags 
+                        JOIN itemtags ON itemtags.itemId = tags.Id 
+                        JOIN items ON items.Id = itemtags.itemId 
+                        where items.Upc = @upc";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<TagEntity>(query, new { upc });
+            return result.ToList();
+        }
+        
         
         private async Task<TagEntity> CreateTag(string name)
         {

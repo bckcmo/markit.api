@@ -9,5 +9,8 @@ namespace Markit.Api.Interfaces.Managers
     {
         Task<Store> CreateStoreAsync(Store store);
         Task<IEnumerable<Store>> QueryByCoordinatesAsync(decimal lat, decimal lon);
+        Task<Store> GetById(int id);
+        Task Delete(int id);
+        Task<Store> PutStore(Store store);
     }
 }

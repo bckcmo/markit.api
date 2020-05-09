@@ -27,7 +27,7 @@ namespace Markit.Api.Controllers
         [HttpGet("{itemId}")]
         public async Task<IActionResult> Get(int itemId)
         {
-            var item = await _itemManager.GetStoreItemByIdAsync(itemId);
+            var item = await _itemManager.GetItemByIdAsync(itemId);
             return Ok(new MarkitApiResponse {Data = item});
         }
         
@@ -49,11 +49,27 @@ namespace Markit.Api.Controllers
         }
 
         [HttpDelete("{itemId}")]
-        public IActionResult Delete(int itemId)
+        public async Task<IActionResult> Delete(int itemId)
         {
-            return Ok();
+            if (!_httpContext.IsSuperUser())
+            {
+                return Unauthorized(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> { ErrorMessages.MissingPrivileges }
+                });
+            }
+            
+            await _itemManager.DeleteItem(itemId);
+            return Ok(new MarkitApiResponse());
         }
         
-        // TODO add GET item/prices endpoint that gets most recent prices
+        [AllowAnonymous]
+        [HttpGet("/prices/query")]
+        public async Task<IActionResult> Get([FromQuery] decimal latitude, [FromQuery] decimal longitude)
+        {
+            var item = await _itemManager.QueryByCoordinatesAsync(latitude, longitude);
+            return Ok(new MarkitApiResponse {Data = item});
+        }
     }
 }

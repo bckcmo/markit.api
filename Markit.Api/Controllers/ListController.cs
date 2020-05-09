@@ -52,7 +52,7 @@ namespace Markit.Api.Controllers
                  });
              }
              
-             var newList = await _listManager.CreateShoppingList(list);
+             var newList = await _listManager.CreateList(list);
              return Ok(new MarkitApiResponse { Data = newList });
          }
 
@@ -115,9 +115,21 @@ namespace Markit.Api.Controllers
          }
          
          [HttpDelete("{listId}")]
-         public IActionResult Delete(string listId)
+         public async Task<IActionResult> Delete(int listId)
          {
-             return Ok();
+             var list = await _listManager.GetListById(listId);
+             
+             if (!_httpContext.IsUserAllowed(list.UserId))
+             {
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.UserDenied }
+                 });
+             }
+             
+             await _listManager.DeleteList(listId);
+             return Ok(new MarkitApiResponse());
          }
          
          [HttpDelete("{listId}/listTag/{listTagId}")]

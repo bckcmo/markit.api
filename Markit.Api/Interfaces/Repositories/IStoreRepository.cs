@@ -11,6 +11,8 @@ namespace Markit.Api.Interfaces.Repositories
         Task<StoreEntity>CreateStore(Store store);
         Task<IEnumerable<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon);
         Task<StoreEntity> GetStoreById(int id);
-        Task<StoreEntity> GetStoreById(int id, IDbConnection conn);
+        Task<List<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds);
+        Task<StoreEntity> ReplaceStore(Store store);
+        Task DeleteStoreById(int id);
     }
 }

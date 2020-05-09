@@ -10,6 +10,7 @@ namespace Markit.Api.Models.Entities
         public string Password { get; set; }
         public string UserName { get; set; }
         public int Reputation { get; set; }
+        public int Role { get; set; }
         public DateTime ReputationLastUpdated { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Statics;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Controllers
@@ -11,25 +14,19 @@ namespace Markit.Api.Controllers
      public class StoreController : Controller
      {
          private readonly IStoreManager _storeManager;
+         private readonly IHttpContextAccessor _httpContext;
 
-         public StoreController(IStoreManager storeManager)
+         public StoreController(IHttpContextAccessor httpContext, IStoreManager storeManager)
          {
              _storeManager = storeManager;
+             _httpContext = httpContext;
          }
          
          [HttpGet("{storeId}")]
-         public IActionResult Get(int storeId)
+         public async Task<IActionResult> Get(int storeId)
          {
-            return Ok( new MarkitApiResponse {
-                Data = new Store
-                {
-                   Id = storeId,
-                   Name ="Food 'n Stuff",
-                   StreetAddress = "101 Main St.",
-                   City = "Pawnee",
-                   State = "IN"
-                }
-            });
+             var store = await _storeManager.GetById(storeId);
+             return Ok( new MarkitApiResponse { Data = store });
          }
          
          [HttpGet("query")]
@@ -49,15 +46,35 @@ namespace Markit.Api.Controllers
          
          [Authorize]
          [HttpPut]
-         public IActionResult Put(Store store)
+         public async Task<IActionResult> Put(Store store)
          {
-             return Ok(new MarkitApiResponse { Data = store });
+             if (!_httpContext.IsSuperUser())
+             {
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.MissingPrivileges }
+                 });
+             }
+             
+             var updatedStore = await _storeManager.PutStore(store);
+             return Ok(new MarkitApiResponse { Data = updatedStore });
          }
          
          [Authorize]
          [HttpDelete("{storeId}")]
-         public IActionResult Delete(string storeId)
+         public async Task<IActionResult> Delete(int storeId)
          {
+             if (!_httpContext.IsSuperUser())
+             {
+                 return Unauthorized(new MarkitApiResponse
+                 {
+                     StatusCode = StatusCodes.Status401Unauthorized,
+                     Errors = new List<string> { ErrorMessages.MissingPrivileges }
+                 });
+             }
+             
+             await _storeManager.Delete(storeId);
              return Ok();
          }
      }

@@ -63,18 +63,61 @@ namespace Markit.Api.Repositories
         public async Task<StoreEntity> GetStoreById(int id)
         {
             using var conn = connection;
+            
             conn.Open();
             
-            return await GetStoreById(id, conn);
-        }
-        
-        public async Task<StoreEntity> GetStoreById(int id, IDbConnection conn)
-        {
             var query = @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude FROM stores
                 WHERE Id = @id";
 
             var store = await conn.QueryAsync<StoreEntity>(query, new {Id = id});
             return store.Single();
+        }
+
+        public async Task<List<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+            
+            var query = @"SELECT * FROM storeitems WHERE storeId IN @storeIds ORDER BY CreatedDate DESC LIMIT 20";
+            
+            var results = await conn.QueryAsync<StoreItemEntity>(query, new { storeIds });
+
+            return results.ToList();
+        }
+
+        public async Task<StoreEntity> ReplaceStore(Store store)
+        {
+            using var conn = connection;
+            var insertQuery =
+                @"UPDATE stores SET Name = @Name, StreetAddress = @StreetAddress, City = @City, State = @State, 
+                PostalCode = @Postalcode, Latitude = @Latitude, Longitude = @Longitude WHERE Id = @Id;
+                SELECT * from stores WHERE id = @Id";
+            
+            conn.Open();
+            
+            var result = await conn.QueryAsync<StoreEntity>(insertQuery, new {
+                Id = store.Id,
+                Name = store.Name,
+                StreetAddress = store.StreetAddress,
+                City = store.City,
+                State = store.State,
+                PostalCode = store.PostalCode,
+                Latitude = store.Coordinate.Latitude,
+                Longitude = store.Coordinate.Longitude
+            });
+            return result.Single();
+        }
+
+        public async Task DeleteStoreById(int id)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+            
+            var query = @"DELETE FROM stores WHERE Id = @id";
+            
+            await conn.ExecuteAsync(query, new { id });
         }
     }
 }

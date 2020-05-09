@@ -104,9 +104,10 @@ namespace Markit.Api.Controllers
         }
 
         [HttpDelete ("{userId}")]
-        public IActionResult Delete(int userId)
+        public async Task<IActionResult> Delete(int userId)
         {
-            return Ok();
+            await _userManager.DeleteUserAsync(userId);
+            return Ok(new MarkitApiResponse());
         }
         
         [HttpGet("{userId}/lists")]

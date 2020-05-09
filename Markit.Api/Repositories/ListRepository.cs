@@ -54,6 +54,17 @@ namespace Markit.Api.Repositories
             return lists.ToList();
         }
 
+        public async Task DeleteList(int id)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+            
+            var query = @"DELETE FROM lists WHERE Id = @id";
+
+            await conn.ExecuteAsync(query, new { id });
+        }
+
         public async Task<ShoppingListEntity> AddTagToList(int listId, ListTag tag)
         {
             using var conn = connection;
