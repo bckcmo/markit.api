@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
@@ -25,7 +27,7 @@ namespace Markit.Api.Controllers
             _listManager = listManager;
             _httpContext = httpContext;
         }
-        
+
         [HttpGet("{userId}")]
         public async Task<IActionResult> Get(int userId)
         {
@@ -34,10 +36,10 @@ namespace Markit.Api.Controllers
                 return Unauthorized(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status401Unauthorized,
-                    Errors = new List<string> { ErrorMessages.UserDenied }
+                    Errors = new List<string> {ErrorMessages.UserDenied}
                 });
             }
-            
+
             var user = await _userManager.GetUserByIdAsync(userId);
 
             if (user == null)
@@ -45,13 +47,13 @@ namespace Markit.Api.Controllers
                 return NotFound(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status404NotFound,
-                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                    Errors = new List<string> {ErrorMessages.ResourceNotFound}
                 });
             }
-            
-            return Ok( new MarkitApiResponse{ Data = user });
+
+            return Ok(new MarkitApiResponse {Data = user});
         }
-        
+
         [HttpGet("currentUser")]
         public async Task<IActionResult> Get()
         {
@@ -62,19 +64,19 @@ namespace Markit.Api.Controllers
                 return NotFound(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status404NotFound,
-                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                    Errors = new List<string> {ErrorMessages.ResourceNotFound}
                 });
             }
-            
-            return Ok( new MarkitApiResponse{ Data = user });
+
+            return Ok(new MarkitApiResponse {Data = user});
         }
-        
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Post(UserRegistration user)
         {
             var newUser = await _userManager.CreateUserAsync(user);
-            return Ok( new MarkitApiResponse { Data = newUser });
+            return Ok(new MarkitApiResponse {Data = newUser});
         }
 
         [HttpPut]
@@ -85,10 +87,10 @@ namespace Markit.Api.Controllers
                 return Unauthorized(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status401Unauthorized,
-                    Errors = new List<string> { ErrorMessages.UserDenied }
+                    Errors = new List<string> {ErrorMessages.UserDenied}
                 });
             }
-            
+
             var userResponse = await _userManager.UpdateUserAsync(user);
 
             if (user.Id == 0)
@@ -96,22 +98,41 @@ namespace Markit.Api.Controllers
                 return NotFound(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status404NotFound,
-                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                    Errors = new List<string> {ErrorMessages.ResourceNotFound}
                 });
             }
-            
-            return Ok( new MarkitApiResponse { Data = userResponse });
+
+            return Ok(new MarkitApiResponse {Data = userResponse});
         }
 
-        [HttpDelete ("{userId}")]
+        [HttpDelete("{userId}")]
         public async Task<IActionResult> Delete(int userId)
         {
             await _userManager.DeleteUserAsync(userId);
             return Ok(new MarkitApiResponse());
         }
-        
+
         [HttpGet("{userId}/lists")]
         public async Task<IActionResult> GetAll(int userId)
+        {
+            if (!_httpContext.IsUserAllowed(userId))
+            {
+                return Unauthorized(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Errors = new List<string> {ErrorMessages.UserDenied}
+                });
+            }
+
+            var lists = await _listManager.GetListsByUserId(userId);
+
+            return Ok(new MarkitApiResponse {Data = lists});
+        }
+
+        [HttpGet("{userId}/list/{listId}/analyze")]
+        public async Task<IActionResult> Get(int userId, int listId, 
+            [Required] decimal latitude, 
+            [Required] decimal longitude)
         {
             if (!_httpContext.IsUserAllowed(userId))
             {
@@ -122,14 +143,20 @@ namespace Markit.Api.Controllers
                 });
             }
 
-            var lists = await _listManager.GetListsByUserId(userId);
-            
-            return Ok( new MarkitApiResponse { Data = lists });
-        }
-        
-        [HttpGet("{userId}/list/{listId}/analyze")]
-        public IActionResult Get(int userId, int listId)
-        {
+            try
+            {
+                var list = await _listManager.GetListById(listId);
+                //var listAnalysis = await _listManager.AnalyzeList(list, latitude, longitude);
+            }
+            catch (Exception exception)
+            {
+                return NotFound(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                });
+            }
+
             return Ok( new MarkitApiResponse { Data = new ListAnalysis
             {
                 Rankings = new List<StoreAnalysis>

@@ -1,3 +1,5 @@
+using Markit.Api.Models.Entities;
+
 namespace Markit.Api.Models.Statics
 {
     public static class ErrorMessages

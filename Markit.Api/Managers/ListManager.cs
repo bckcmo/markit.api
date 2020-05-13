@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
+using Markit.Api.Models;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Models.Entities;
 
@@ -12,12 +13,16 @@ namespace Markit.Api.Managers
     {
         private readonly IListRepository _listRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly IStoreRepository _storeRepository;
         
-        public ListManager(IListRepository listRepository, ITagRepository tagRepository)
+        public ListManager(IListRepository listRepository, ITagRepository tagRepository, 
+            IStoreRepository storeRepository)
         {
             _listRepository = listRepository;
             _tagRepository = tagRepository;
+            _storeRepository = storeRepository;
         }
+        
         public async Task<ShoppingList> CreateList(PostList list)
         {
             var newList = await _listRepository.CreateShoppingList(list);
@@ -83,6 +88,39 @@ namespace Markit.Api.Managers
         {
             var updatedList = await _listRepository.UpdateList(listId, list);
             return await BuildShoppingListFromEntity(updatedList, listId);
+        }
+
+        public async Task<ListAnalysis> AnalyzeList(ShoppingList list, decimal latitude, decimal longitude)
+        {
+            // get stores close to user
+            var nearbyStores = await _storeRepository.QueryByCoordinates(latitude, longitude);
+
+            foreach (var store in nearbyStores)
+            {
+                var userPrices = list.ListTags.Select(t =>
+                {
+                    try
+                    {
+                        // Sql query for this -- put in item repo
+                        // use tag to get itemId from itemtags
+                        // use itemId and storeId to get storeitem
+                        // use storeItemId to get UserPrice
+                        // return userPrice
+                        return new UserPriceEntity();
+                    }
+                    catch
+                    {
+                        // item is not in store, so we can't use it for this analysis
+                    }
+                    return new UserPriceEntity();
+                });
+                // get prices for items
+                // calculate total price and staleness for each store
+            }
+            
+
+            
+            return new ListAnalysis();
         }
 
         private async Task<ShoppingList> BuildShoppingListFromEntity(ShoppingListEntity entity, int listId)

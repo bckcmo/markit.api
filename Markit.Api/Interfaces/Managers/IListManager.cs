@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Markit.Api.Models;
 using Markit.Api.Models.Dtos;
 
 namespace Markit.Api.Interfaces.Managers
@@ -15,5 +16,6 @@ namespace Markit.Api.Interfaces.Managers
         Task<ListTag> UpdateListTag(int listId, int listTagId, ListTag listTag);
         Task<ShoppingList> UpdateList(int listId, PostList list);
         Task<ListTag> CreateListTag(int listId, ListTag listTag);
+        Task<ListAnalysis> AnalyzeList(ShoppingList list, decimal latitude, decimal longitude);
     }
 }
