@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Markit.Api.Exceptions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models;
@@ -14,13 +16,17 @@ namespace Markit.Api.Managers
         private readonly IListRepository _listRepository;
         private readonly ITagRepository _tagRepository;
         private readonly IStoreRepository _storeRepository;
+        private readonly IItemRepository _itemRepository;
+        private readonly IItemManager _itemManager;
         
         public ListManager(IListRepository listRepository, ITagRepository tagRepository, 
-            IStoreRepository storeRepository)
+            IStoreRepository storeRepository, IItemRepository itemRepository, IItemManager itemManager)
         {
             _listRepository = listRepository;
             _tagRepository = tagRepository;
             _storeRepository = storeRepository;
+            _itemRepository = itemRepository;
+            _itemManager = itemManager;
         }
         
         public async Task<ShoppingList> CreateList(PostList list)
@@ -92,35 +98,105 @@ namespace Markit.Api.Managers
 
         public async Task<ListAnalysis> AnalyzeList(ShoppingList list, decimal latitude, decimal longitude)
         {
-            // get stores close to user
-            var nearbyStores = await _storeRepository.QueryByCoordinates(latitude, longitude);
+            var nearbyStores = (await _storeRepository.QueryByCoordinates(latitude, longitude)).ToList();
 
+            if (!nearbyStores.Any())
+            {
+                throw new ListAnalysisException("Not enough nearby stores to complete the analysis.");
+            }
+            
+            var listAnalysis = new ListAnalysis {Rankings = new List<StoreAnalysis>()};
+            
             foreach (var store in nearbyStores)
             {
-                var userPrices = list.ListTags.Select(t =>
+                var userPriceEntites = await Task.WhenAll(list.ListTags.Select(async t =>
                 {
                     try
                     {
-                        // Sql query for this -- put in item repo
-                        // use tag to get itemId from itemtags
-                        // use itemId and storeId to get storeitem
-                        // use storeItemId to get UserPrice
-                        // return userPrice
-                        return new UserPriceEntity();
+                        return await _itemRepository.GetMostRecentUserPriceByTagName(t.Tag.Name, store.Id);
                     }
                     catch
                     {
-                        // item is not in store, so we can't use it for this analysis
+                        return null;
                     }
-                    return new UserPriceEntity();
-                });
-                // get prices for items
-                // calculate total price and staleness for each store
+
+                }));
+                
+                var userPrices = await Task.WhenAll(userPriceEntites.Select(async e => {
+                    try
+                    {
+                        return await _itemManager.GetUserPriceFromEntity(e);
+                    }
+                    catch
+                    { 
+                        return null;
+                    }
+                }));
+                
+                var storeAnalysis = new StoreAnalysis {ListItems = new List<ListAnalysisItem>()};
+
+                foreach (var userPrice in userPrices)
+                {
+                    if (userPrice == null)
+                    {
+                        storeAnalysis.MissingItems = true;
+                        continue;
+                    }
+                    
+                    var quantity = list.ListTags.FirstOrDefault(t => userPrice.TagNames.Contains(t.Tag.Name))?.Quantity;
+                    quantity ??= 1;
+                    storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
+                    storeAnalysis.Staleness += AssignStalenessToPrice(userPrice);
+                    storeAnalysis.ListItems.Add(MapUserPriceToListItem(userPrice));
+                }
+                
+                storeAnalysis.Store = new Store
+                {
+                    Id = store.Id,
+                    StreetAddress = store.StreetAddress,
+                    City = store.City,
+                    State = store.State,
+                    PostalCode = store.PostalCode,
+                    Name = store.Name,
+                    Coordinate = new Coordinate
+                    {
+                        Latitude = store.Latitude,
+                        Longitude = store.Longitude
+                    },
+                    GoogleId = store.GoogleId
+                };
+                
+                listAnalysis.Rankings.Add(storeAnalysis);
             }
             
+            int priceRank = 0, stalnessRank = 0, totalRank = 0;
 
-            
-            return new ListAnalysis();
+            listAnalysis.Rankings = listAnalysis.Rankings.OrderBy(r => r.TotalPrice)
+                .Select(analysis => {
+                    analysis.PriceRank = analysis.MissingItems ? -1 : ++priceRank;
+                    return analysis;
+                }).OrderBy(r => r.Staleness)
+                .Select(analysis => {
+                    analysis.StalenessRank = analysis.MissingItems ? -1 : ++stalnessRank;
+                    return analysis; 
+                }).OrderBy(r => (r.StalenessRank * 0.333 ) + ( r.PriceRank * 0.6666))
+                .Select(analysis => {
+                    analysis.PriceAndStalenessRank = analysis.MissingItems ? -1 : ++totalRank;
+                    return analysis; 
+                }).ToList();
+
+            return listAnalysis;
+        }
+
+        private ListAnalysisItem MapUserPriceToListItem(UserPrice userPrice)
+        {
+            return new ListAnalysisItem
+            {
+                Item = userPrice.Item,
+                Price = userPrice.Price,
+                IsSalePrice = userPrice.IsSalePrice,
+                TagNames = userPrice.TagNames
+            };
         }
 
         private async Task<ShoppingList> BuildShoppingListFromEntity(ShoppingListEntity entity, int listId)
@@ -167,6 +243,29 @@ namespace Markit.Api.Managers
                 Quantity = listTagEntity.Quantity,
                 Comment = listTagEntity.Comment
             };
+        }
+
+        private int AssignStalenessToPrice(UserPrice price)
+        {
+            var currentDate = DateTime.Now;
+            var staleness = 0;
+            
+            if (price.CreatedAt <= currentDate.AddDays(-1) && price.CreatedAt >= currentDate.AddDays(-7))
+            {
+                staleness = 1;
+            } 
+            else if (price.CreatedAt < currentDate.AddDays(-7) && price.CreatedAt >= currentDate.AddDays(-14))
+            {
+                staleness = 2;
+            }
+            else if(price.CreatedAt < currentDate.AddDays(-14))
+            {
+                staleness = 3;
+            }
+
+            var salePriceMultiplier = price.IsSalePrice ? 2 : 1;
+
+            return staleness * salePriceMultiplier;
         }
     }
 }

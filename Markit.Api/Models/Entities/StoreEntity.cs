@@ -13,6 +13,7 @@ namespace Markit.Api.Models.Entities
         public string PostalCode { get; set; }
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
+        public string GoogleId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

@@ -11,17 +11,21 @@ namespace Markit.Api.Managers
     {
         private readonly IRatingRepository _ratingRepository;
         private readonly IStoreRepository _storeRepository;
+        private readonly IUserRepository _userRepository;
 
-        public RatingsManager(IRatingRepository ratingRepository, IStoreRepository storeRepository)
+        public RatingsManager(IRatingRepository ratingRepository, IStoreRepository storeRepository,
+        IUserRepository userRepository)
         {
             _ratingRepository = ratingRepository;
             _storeRepository = storeRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<Rating> CreateRating(Rating rating)
         {
             var store = await _storeRepository.GetStoreById(rating.Store.Id);
             var newRating = await _ratingRepository.CreateAsync(rating);
+            await _userRepository.AddToReputation(rating.UserId, 1);
             
             return new Rating
             {
@@ -41,7 +45,8 @@ namespace Markit.Api.Managers
                     {
                         Latitude = store.Latitude,
                         Longitude = store.Longitude
-                    }
+                    },
+                    GoogleId = store.GoogleId
                 }
             };
         }
@@ -71,7 +76,8 @@ namespace Markit.Api.Managers
                     {
                         Latitude = store.Latitude,
                         Longitude = store.Longitude
-                    }
+                    },
+                    GoogleId = store.GoogleId
                 }
             });
             

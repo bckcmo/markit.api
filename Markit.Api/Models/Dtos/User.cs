@@ -1,4 +1,6 @@
-﻿namespace Markit.Api.Models.Dtos
+﻿using Markit.Api.Extensions;
+
+namespace Markit.Api.Models.Dtos
 {
     public class User
     {
@@ -7,5 +9,6 @@
         public string LastName { get; set; }
         public string UserName { get; set; }
         public int Reputation { get; set; }
+        public string Level => this.GetUserLevel();
     }
 }

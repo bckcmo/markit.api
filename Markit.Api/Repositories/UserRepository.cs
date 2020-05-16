@@ -81,5 +81,14 @@ namespace Markit.Api.Repositories
             var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {Id = id});
             return result;
         }
+
+        public async Task<UserEntity> AddToReputation(int id, int addition)
+        {
+            using var conn = connection;
+            var query = @"UPDATE users SET reputation = reputation + @addition WHERE Id = @id";
+            conn.Open();
+            var result = await conn.QuerySingleOrDefaultAsync<UserEntity>(query, new {id, addition});
+            return result;
+        }
     }
 }

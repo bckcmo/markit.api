@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Markit.Api.Exceptions;
 using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Models;
@@ -146,53 +147,24 @@ namespace Markit.Api.Controllers
             try
             {
                 var list = await _listManager.GetListById(listId);
-                //var listAnalysis = await _listManager.AnalyzeList(list, latitude, longitude);
+                return Ok(new MarkitApiResponse {Data = await _listManager.AnalyzeList(list, latitude, longitude)});
+            }
+            catch (ListAnalysisException exception)
+            {
+                return NotFound(new MarkitApiResponse
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Errors = new List<string> { exception.Message }
+                });
             }
             catch (Exception exception)
             {
                 return NotFound(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status404NotFound,
-                    Errors = new List<string> { ErrorMessages.ResourceNotFound }
+                    Errors = new List<string> { $"{ErrorMessages.ResourceNotFound}. List with Id {listId} does not exist." }
                 });
             }
-
-            return Ok( new MarkitApiResponse { Data = new ListAnalysis
-            {
-                Rankings = new List<StoreAnalysis>
-                {
-                    new StoreAnalysis
-                    {
-                        Store = new Store
-                        {
-                            Id = 0,
-                            Name ="Food 'n Stuff",
-                            StreetAddress = "101 Main St.",
-                            City = "Pawnee",
-                            State = "IN"
-                        },
-                        TotalPrice = 67.88m,
-                        Staleness = 10,
-                        PriceRank = 1,
-                        PriceAndStalenessRank = 2
-                    },
-                    new StoreAnalysis
-                    {
-                        Store = new Store
-                        {
-                            Id = 1,
-                            Name ="Woody's Discount Grocer",
-                            StreetAddress = "400 West Lane",
-                            City = "Pawnee",
-                            State = "IN"
-                        },
-                        TotalPrice = 72.14m,
-                        Staleness = 0,
-                        PriceRank = 2,
-                        PriceAndStalenessRank = 1
-                    }
-                }
-            }});
         }
 
         [AllowAnonymous]

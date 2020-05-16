@@ -91,14 +91,14 @@ namespace Markit.Api.Repositories
                 (SELECT Id FROM storeItems WHERE StoreId = @StoreId and ItemId = 
                 (SELECT Id FROM items WHERE Upc = @Upc)), @UserId, @Price, @IsSalePrice);
                 COMMIT; 
-                SELECT * FROM storeItems WHERE ItemId = (SELECT Id from items WHERE Upc = @Upc);";
+                SELECT * FROM storeItems WHERE ItemId = (SELECT Id from items WHERE Upc = @Upc) AND storeId = @storeId;";
             
             var result = await conn.QuerySingleAsync<StoreItemEntity>(updateQuery, item);
-            await Task.WhenAll(item.Tags.Select( t => AddTags(t, item.Upc)));
+            await Task.WhenAll(item.Tags.Select( t => AddTag(t, item.Upc)));
             return result;
         }
 
-        public async Task<List<UserPriceEntity>> GetUserPricesByItemId(int storeItemId)
+        public async Task<List<UserPriceEntity>> GetMostRecentUserPriceByTagName(int storeItemId)
         {
             using var conn = connection;
             var query = @"SELECT * from userPrices where StoreItemId = @storeItemId";
@@ -126,17 +126,35 @@ namespace Markit.Api.Repositories
             return results.ToList();
         }
 
-        private async Task<TagEntity> AddTags(string tag, string upc)
+        public async Task<UserPriceEntity> GetMostRecentUserPriceByTagName(string tagName, int storeId)
         {
-            using var conn = new MySqlConnection(_connectionString);
-            var query = @"INSERT IGNORE INTO tags (Name) VALUES (@Tag);
-                            INSERT IGNORE INTO itemTags (TagId, ItemId) VALUES (LAST_INSERT_ID(), 
-                            (SELECT Id from items WHERE Upc = @Upc))";
+            using var conn = connection;
+            conn.Open();
+
+            var query = @"Select * FROM userPrices 
+                          JOIN storeItems ON storeItems.Id = userPrices.StoreItemId 
+                          WHERE storeItems.StoreId = @storeId 
+                          AND itemId = (SELECT itemId FROM itemtags WHERE tagId = (SELECT id FROM tags WHERE NAME = @tagName)) 
+                          ORDER BY userprices.CreatedAt DESC LIMIT 1";
+            
+            var result = await conn.QueryAsync<UserPriceEntity>(query, new { tagName, storeId });
+
+            return result.FirstOrDefault();
+        }
+
+        private async Task<TagEntity> AddTag(string tag, string upc)
+        {
+            await using var conn = new MySqlConnection(_connectionString);
+            var query = @"INSERT IGNORE INTO tags (Name) VALUES (@tag);
+                          INSERT IGNORE INTO itemTags (TagId, ItemId) VALUES (
+                            (SELECT Id FROM tags WHERE Name = @tag), 
+                            (SELECT Id FROM items WHERE Upc = @upc));
+                            SELECT * FROM Tags WHERE Name = @tag";
     
             var result = new TagEntity();
             try
             {
-                result = await conn.QuerySingleAsync<TagEntity>(query, new {Tag = tag, Upc = upc});
+                result = await conn.QuerySingleAsync<TagEntity>(query, new {tag, upc});
             }
             catch
             {

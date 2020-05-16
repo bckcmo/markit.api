@@ -26,8 +26,9 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var insertQuery =
-                @"INSERT into stores (Name, StreetAddress, City, State, PostalCode, Latitude, Longitude) 
-                    Values (@Name, @StreetAddress, @City, @State, @Postalcode, @Latitude, @Longitude);
+                @"INSERT into stores (Name, StreetAddress, City, State, PostalCode, Latitude, Longitude, GoogleId) 
+                    Values (@Name, @StreetAddress, @City, @State, @Postalcode, @Latitude, @Longitude, @GoogleId)
+                    ON DUPLICATE KEY UPDATE Id = LAST_INSERT_ID(id), Name = @Name;
                     SELECT * from stores WHERE id = LAST_INSERT_ID()";
             
             conn.Open();
@@ -39,7 +40,8 @@ namespace Markit.Api.Repositories
                 State = store.State,
                 PostalCode = store.PostalCode,
                 Latitude = store.Coordinate.Latitude,
-                Longitude = store.Coordinate.Longitude
+                Longitude = store.Coordinate.Longitude,
+                GoogleId = store.GoogleId
             });
             return result.Single();
         }
@@ -48,7 +50,8 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var query =
-                @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude, (3956 * 
+                @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude, GoogleId, 
+                    (3956 * 
                     acos (cos ( radians(@lat) ) * cos( radians( Latitude ) ) * 
                     cos( radians( @lon ) - radians(Longitude) ) + 
                     sin ( radians(@lat) ) * sin( radians( Latitude ) ))) 
@@ -66,8 +69,7 @@ namespace Markit.Api.Repositories
             
             conn.Open();
             
-            var query = @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude FROM stores
-                WHERE Id = @id";
+            var query = @"SELECT * FROM stores WHERE Id = @id";
 
             var store = await conn.QueryAsync<StoreEntity>(query, new {Id = id});
             return store.Single();
@@ -91,7 +93,8 @@ namespace Markit.Api.Repositories
             using var conn = connection;
             var insertQuery =
                 @"UPDATE stores SET Name = @Name, StreetAddress = @StreetAddress, City = @City, State = @State, 
-                PostalCode = @Postalcode, Latitude = @Latitude, Longitude = @Longitude WHERE Id = @Id;
+                PostalCode = @Postalcode, Latitude = @Latitude, Longitude = @Longitude, GoogleId = @GoogleId
+                WHERE Id = @Id;
                 SELECT * from stores WHERE id = @Id";
             
             conn.Open();

@@ -1,6 +1,6 @@
 namespace Markit.Api.Models.Statics
 {
-    enum Roles
+    public enum Roles
     {
         User = 0,
         SuperUser = 1

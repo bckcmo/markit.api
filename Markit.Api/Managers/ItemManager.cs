@@ -29,6 +29,7 @@ namespace Markit.Api.Managers
         public async Task<StoreItem> CreateStoreItemAsync(PostStoreItem item)
         {
             var newItem = await _itemRepository.CreateStoreItem(item);
+            await _userRepository.AddToReputation(item.UserId, 1);
             
             return new StoreItem
             {
@@ -65,43 +66,46 @@ namespace Markit.Api.Managers
             var storeItemIds = storeItemEntities.Select(e => e.Id).ToList();
             var userPriceEntities = await _itemRepository.GetUserPricesByStoreItemIds(storeItemIds);
 
-            return (await Task.WhenAll(userPriceEntities.Select(async p =>
-            {
-                var storeItemEntity = await _itemRepository.GetStoreItemById(p.StoreItemId);
-                var storeEntity = await _storeRepository.GetStoreById(storeItemEntity.StoreId);
-                var itemEntity = await _itemRepository.GetItemById(storeItemEntity.ItemId);
-                var tags = await _tagRepository.GetTagsByItemId(itemEntity.Id);
-                var userEntity = await  _userRepository.GetById(p.UserId);
+            return (await Task.WhenAll(userPriceEntities.Select(GetUserPriceFromEntity))).ToList();
+        }
+
+        public async Task<UserPrice> GetUserPriceFromEntity(UserPriceEntity userPriceEntity)
+        {
+            var storeItemEntity = await _itemRepository.GetStoreItemById(userPriceEntity.StoreItemId);
+            var storeEntity = await _storeRepository.GetStoreById(storeItemEntity.StoreId);
+            var itemEntity = await _itemRepository.GetItemById(storeItemEntity.ItemId);
+            var tags = await _tagRepository.GetTagsByItemId(itemEntity.Id);
+            var userEntity = await  _userRepository.GetById(userPriceEntity.UserId);
                 
-                return new UserPrice
+            return new UserPrice
+            {
+                Id = userPriceEntity.Id,
+                UserName = userEntity.UserName,
+                Store = new Store
                 {
-                    Id = p.Id,
-                    UserName = userEntity.UserName,
-                    Store = new Store
+                    Id = storeEntity.Id,
+                    Name = storeEntity.Name,
+                    StreetAddress = storeEntity.StreetAddress,
+                    City = storeEntity.City,
+                    State = storeEntity.State,
+                    PostalCode = storeEntity.PostalCode,
+                    Coordinate = new Coordinate
                     {
-                        Id = storeEntity.Id,
-                        Name = storeEntity.Name,
-                        StreetAddress = storeEntity.StreetAddress,
-                        City = storeEntity.City,
-                        State = storeEntity.State,
-                        PostalCode = storeEntity.PostalCode,
-                        Coordinate = new Coordinate
-                        {
-                            Latitude = storeEntity.Latitude,
-                            Longitude = storeEntity.Longitude
-                        }
+                        Latitude = storeEntity.Latitude,
+                        Longitude = storeEntity.Longitude
                     },
-                    Item = new Item
-                    {
-                        Id = itemEntity.Id,
-                        Upc = itemEntity.Upc
-                    },
-                    Price = p.Price,
-                    TagNames = tags.Select(t => t.Name).ToList(),
-                    IsSalePrice = p.IsSalePrice,
-                    CreatedAt = p.CreatedAt
-                };
-            }))).ToList();
+                    GoogleId = storeEntity.GoogleId
+                },
+                Item = new Item
+                {
+                    Id = itemEntity.Id,
+                    Upc = itemEntity.Upc
+                },
+                Price = userPriceEntity.Price,
+                TagNames = tags.Select(t => t.Name).ToList(),
+                IsSalePrice = userPriceEntity.IsSalePrice,
+                CreatedAt = userPriceEntity.CreatedAt
+            };
         }
     }
 }

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Security.Authentication;
 using System.Security.Claims;
 using Markit.Api.Models.Statics;
 using Microsoft.AspNetCore.Http;

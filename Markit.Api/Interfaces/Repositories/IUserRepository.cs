@@ -14,5 +14,6 @@ namespace Markit.Api.Interfaces.Repositories
         Task<UserEntity> GetByUserName(string userName);
         Task<UserEntity> Update(User user);
         Task<UserEntity> Delete(int id);
+        Task<UserEntity> AddToReputation(int id, int addition);
     }
 }

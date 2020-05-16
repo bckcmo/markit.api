@@ -32,7 +32,8 @@ namespace Markit.Api.Managers
                 {
                     Latitude = storeEntity.Latitude,
                     Longitude = storeEntity.Longitude
-                }
+                },
+                GoogleId = storeEntity.GoogleId
             };
         }
 
@@ -51,7 +52,8 @@ namespace Markit.Api.Managers
                 {
                     Latitude = store.Latitude,
                     Longitude = store.Longitude
-                }
+                },
+                GoogleId = store.GoogleId
             });
         }
 

@@ -9,5 +9,6 @@ namespace Markit.Api.Models.Dtos
         public string State { get; set; }
         public string PostalCode { get; set; }
         public Coordinate Coordinate { get; set; }
+        public string GoogleId { get; set; }
     }
 }
