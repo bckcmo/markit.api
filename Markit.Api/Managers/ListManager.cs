@@ -109,66 +109,16 @@ namespace Markit.Api.Managers
             
             foreach (var store in nearbyStores)
             {
-                var userPriceEntites = await Task.WhenAll(list.ListTags.Select(async t =>
-                {
-                    try
-                    {
-                        return await _itemRepository.GetMostRecentUserPriceByTagName(t.Tag.Name, store.Id);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-
-                }));
-                
-                var userPrices = await Task.WhenAll(userPriceEntites.Select(async e => {
-                    try
-                    {
-                        return await _itemManager.GetUserPriceFromEntity(e);
-                    }
-                    catch
-                    { 
-                        return null;
-                    }
-                }));
-                
-                var storeAnalysis = new StoreAnalysis {ListItems = new List<ListAnalysisItem>()};
-
-                foreach (var userPrice in userPrices)
-                {
-                    if (userPrice == null)
-                    {
-                        storeAnalysis.MissingItems = true;
-                        continue;
-                    }
-                    
-                    var quantity = list.ListTags.FirstOrDefault(t => userPrice.TagNames.Contains(t.Tag.Name))?.Quantity;
-                    quantity ??= 1;
-                    storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
-                    storeAnalysis.Staleness += AssignStalenessToPrice(userPrice);
-                    storeAnalysis.ListItems.Add(MapUserPriceToListItem(userPrice));
-                }
-                
-                storeAnalysis.Store = new Store
-                {
-                    Id = store.Id,
-                    StreetAddress = store.StreetAddress,
-                    City = store.City,
-                    State = store.State,
-                    PostalCode = store.PostalCode,
-                    Name = store.Name,
-                    Coordinate = new Coordinate
-                    {
-                        Latitude = store.Latitude,
-                        Longitude = store.Longitude
-                    },
-                    GoogleId = store.GoogleId
-                };
-                
-                listAnalysis.Rankings.Add(storeAnalysis);
+                listAnalysis.Rankings.Add(await BuildStoreAnalysisFromStoreEntity(store, list));
             }
+
+            AddRankingsToList(listAnalysis);
             
+            return listAnalysis;
+        }
+
+        private void AddRankingsToList(ListAnalysis listAnalysis)
+        {
             int priceRank = 0, stalnessRank = 0, totalRank = 0;
 
             listAnalysis.Rankings = listAnalysis.Rankings.OrderBy(r => r.TotalPrice)
@@ -184,8 +134,84 @@ namespace Markit.Api.Managers
                     analysis.PriceAndStalenessRank = analysis.MissingItems ? -1 : ++totalRank;
                     return analysis; 
                 }).ToList();
+        }
 
-            return listAnalysis;
+        private async Task<StoreAnalysis> BuildStoreAnalysisFromStoreEntity(StoreEntity storeEntity, ShoppingList list)
+        {
+            var userPrices = await GetUserPricesFromList(list, storeEntity);
+            
+            var storeAnalysis = new StoreAnalysis {ListItems = new List<ListAnalysisItem>()};
+
+            foreach (var userPrice in userPrices)
+            {
+                if (userPrice == null)
+                {
+                    storeAnalysis.MissingItems = true;
+                    continue;
+                }
+                
+                var quantity = list.ListTags.FirstOrDefault(t => userPrice.TagNames.Contains(t.Tag.Name))?.Quantity;
+                quantity ??= 1;
+                storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
+                storeAnalysis.Staleness += AssignStalenessToPrice(userPrice);
+                storeAnalysis.ListItems.Add(MapUserPriceToListItem(userPrice));
+            }
+
+            storeAnalysis.Store = MapStoreEntityToStore(storeEntity);
+
+            return storeAnalysis;
+        }
+
+        private Store MapStoreEntityToStore(StoreEntity storeEntity)
+        {
+            return new Store
+            {
+                Id = storeEntity.Id,
+                StreetAddress = storeEntity.StreetAddress,
+                City = storeEntity.City,
+                State = storeEntity.State,
+                PostalCode = storeEntity.PostalCode,
+                Name = storeEntity.Name,
+                Coordinate = new Coordinate
+                {
+                    Latitude = storeEntity.Latitude,
+                    Longitude = storeEntity.Longitude
+                },
+                GoogleId = storeEntity.GoogleId
+            };
+        }
+
+        private async Task<List<UserPriceEntity>> GetUserPriceEntities(ShoppingList list, StoreEntity storeEntity)
+        {
+            var userPriceEntities =  await Task.WhenAll(list.ListTags.Select(async t =>
+            {
+                try
+                {
+                    return await _itemRepository.GetMostRecentUserPriceByTagName(t.Tag.Name, storeEntity.Id);
+                }
+                catch
+                {
+                    return null;
+                }
+            }));
+
+            return userPriceEntities.ToList();
+        }
+
+        private async Task<List<UserPrice>> GetUserPricesFromList(ShoppingList list, StoreEntity storeEntity)
+        {
+            var userPrices = await Task.WhenAll((await GetUserPriceEntities(list, storeEntity)).Select(async e => {
+                try
+                {
+                    return await _itemManager.GetUserPriceFromEntity(e);
+                }
+                catch
+                { 
+                    return null;
+                }
+            }));
+
+            return userPrices.ToList();
         }
 
         private ListAnalysisItem MapUserPriceToListItem(UserPrice userPrice)

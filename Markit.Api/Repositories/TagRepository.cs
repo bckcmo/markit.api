@@ -87,7 +87,7 @@ namespace Markit.Api.Repositories
             using var conn = connection;
             
             var query = @"SELECT tags.Id, tags.Name, tags.CreatedAt FROM tags 
-                        JOIN itemtags ON itemtags.itemId = tags.Id where itemtags.itemId = @itemId";
+                        JOIN itemtags ON itemtags.tagId = tags.Id where itemtags.itemId = @itemId";
             
             conn.Open();
             
