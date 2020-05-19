@@ -10,5 +10,6 @@ namespace Markit.Api.Models.Dtos
         public string PostalCode { get; set; }
         public Coordinate Coordinate { get; set; }
         public string GoogleId { get; set; }
+        public decimal? AverageRating { get; set; }
     }
 }

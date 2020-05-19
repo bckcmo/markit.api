@@ -27,7 +27,9 @@ namespace Markit.Api.Repositories
             using var conn = connection;
             var query = @"INSERT INTO ratings (UserId, StoreId, Comment, Points) 
                         VALUES (@UserId, @StoreId, @Comment, @Points);
-                        SELECT * FROM ratings WHERE id = LAST_INSERT_ID()";
+                        UPDATE stores SET AverageRating = (SELECT ROUND(AVG(Points), 1) 
+                        FROM ratings WHERE StoreId = @StoreId) WHERE Id = @StoreId;
+                        SELECT * FROM ratings WHERE id = LAST_INSERT_ID();";
 
             conn.Open();
 

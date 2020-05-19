@@ -14,6 +14,7 @@ namespace Markit.Api.Models.Entities
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
         public string GoogleId { get; set; }
+        public decimal? AverageRating { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

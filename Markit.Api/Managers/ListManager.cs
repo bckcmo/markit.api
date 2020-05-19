@@ -177,7 +177,8 @@ namespace Markit.Api.Managers
                     Latitude = storeEntity.Latitude,
                     Longitude = storeEntity.Longitude
                 },
-                GoogleId = storeEntity.GoogleId
+                GoogleId = storeEntity.GoogleId,
+                AverageRating = storeEntity.AverageRating
             };
         }
 

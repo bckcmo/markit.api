@@ -33,7 +33,8 @@ namespace Markit.Api.Managers
                     Latitude = storeEntity.Latitude,
                     Longitude = storeEntity.Longitude
                 },
-                GoogleId = storeEntity.GoogleId
+                GoogleId = storeEntity.GoogleId,
+                AverageRating = storeEntity.AverageRating
             };
         }
 
@@ -53,7 +54,8 @@ namespace Markit.Api.Managers
                     Latitude = store.Latitude,
                     Longitude = store.Longitude
                 },
-                GoogleId = store.GoogleId
+                GoogleId = store.GoogleId,
+                AverageRating = store.AverageRating
             });
         }
 
@@ -73,7 +75,9 @@ namespace Markit.Api.Managers
                 {
                     Latitude = storeEntity.Latitude,
                     Longitude = storeEntity.Longitude
-                }
+                },
+                GoogleId = storeEntity.GoogleId,
+                AverageRating = storeEntity.AverageRating
             };
         }
 
@@ -93,7 +97,9 @@ namespace Markit.Api.Managers
                 {
                     Latitude = storeEntity.Latitude,
                     Longitude = storeEntity.Longitude
-                }
+                },
+                GoogleId = storeEntity.GoogleId,
+                AverageRating = storeEntity.AverageRating
             };
         }
 

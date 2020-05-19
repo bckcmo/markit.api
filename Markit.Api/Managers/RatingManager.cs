@@ -23,10 +23,10 @@ namespace Markit.Api.Managers
 
         public async Task<Rating> CreateRating(Rating rating)
         {
-            var store = await _storeRepository.GetStoreById(rating.Store.Id);
             var newRating = await _ratingRepository.CreateAsync(rating);
             await _userRepository.AddToReputation(rating.UserId, 1);
-            
+            var store = await _storeRepository.GetStoreById(rating.Store.Id);
+
             return new Rating
             {
                 Id = newRating.Id,
@@ -46,7 +46,8 @@ namespace Markit.Api.Managers
                         Latitude = store.Latitude,
                         Longitude = store.Longitude
                     },
-                    GoogleId = store.GoogleId
+                    GoogleId = store.GoogleId,
+                    AverageRating = store.AverageRating
                 }
             };
         }
@@ -77,7 +78,8 @@ namespace Markit.Api.Managers
                         Latitude = store.Latitude,
                         Longitude = store.Longitude
                     },
-                    GoogleId = store.GoogleId
+                    GoogleId = store.GoogleId,
+                    AverageRating = store.AverageRating
                 }
             });
             
