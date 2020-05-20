@@ -50,7 +50,7 @@ namespace Markit.Api.Repositories
         {
             using var conn = connection;
             var query =
-                @"SELECT Id, Name, StreetAddress, City, State, PostalCode, Latitude, Longitude, GoogleId, 
+                @"SELECT *, 
                     (3956 * 
                     acos (cos ( radians(@lat) ) * cos( radians( Latitude ) ) * 
                     cos( radians( @lon ) - radians(Longitude) ) + 
