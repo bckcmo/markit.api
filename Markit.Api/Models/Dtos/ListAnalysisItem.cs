@@ -6,6 +6,7 @@ namespace Markit.Api.Models.Dtos
     {
         public List<string> TagNames { get; set; }
         public decimal Price { get; set; }
+        public PriceAttribution PriceSubmittedBy { get; set; } 
         public Item Item { get; set; }
         public bool IsSalePrice { get; set; }
     }

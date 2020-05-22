@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Markit.Api.Exceptions;
+using Markit.Api.Extensions;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models;
@@ -18,28 +20,27 @@ namespace Markit.Api.Managers
         private readonly IStoreRepository _storeRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IItemManager _itemManager;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
         
         public ListManager(IListRepository listRepository, ITagRepository tagRepository, 
-            IStoreRepository storeRepository, IItemRepository itemRepository, IItemManager itemManager)
+            IStoreRepository storeRepository, IItemRepository itemRepository, 
+            IItemManager itemManager, IUserRepository userRepository, IMapper mapper)
         {
             _listRepository = listRepository;
             _tagRepository = tagRepository;
             _storeRepository = storeRepository;
             _itemRepository = itemRepository;
             _itemManager = itemManager;
+            _userRepository = userRepository;
+            _mapper = mapper;
         }
         
         public async Task<ShoppingList> CreateList(PostList list)
         {
-            var newList = await _listRepository.CreateShoppingList(list);
-            
-            return new ShoppingList
-            {
-                Id = newList.Id,
-                UserId = list.UserId,
-                Description = list.Description,
-                Name = list.Name
-            };
+            var listEntity = await _listRepository.CreateShoppingList(list);
+            var newList = _mapper.Map<ShoppingList>(listEntity);
+            return newList;
         }
 
         public async Task DeleteList(int id)
@@ -154,32 +155,12 @@ namespace Markit.Api.Managers
                 quantity ??= 1;
                 storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
                 storeAnalysis.Staleness += AssignStalenessToPrice(userPrice);
-                storeAnalysis.ListItems.Add(MapUserPriceToListItem(userPrice));
+                storeAnalysis.ListItems.Add(await MapUserPriceToListItem(userPrice));
             }
 
-            storeAnalysis.Store = MapStoreEntityToStore(storeEntity);
+            storeAnalysis.Store = _mapper.Map<Store>(storeEntity);
 
             return storeAnalysis;
-        }
-
-        private Store MapStoreEntityToStore(StoreEntity storeEntity)
-        {
-            return new Store
-            {
-                Id = storeEntity.Id,
-                StreetAddress = storeEntity.StreetAddress,
-                City = storeEntity.City,
-                State = storeEntity.State,
-                PostalCode = storeEntity.PostalCode,
-                Name = storeEntity.Name,
-                Coordinate = new Coordinate
-                {
-                    Latitude = storeEntity.Latitude,
-                    Longitude = storeEntity.Longitude
-                },
-                GoogleId = storeEntity.GoogleId,
-                AverageRating = storeEntity.AverageRating
-            };
         }
 
         private async Task<List<UserPriceEntity>> GetUserPriceEntities(ShoppingList list, StoreEntity storeEntity)
@@ -215,14 +196,23 @@ namespace Markit.Api.Managers
             return userPrices.ToList();
         }
 
-        private ListAnalysisItem MapUserPriceToListItem(UserPrice userPrice)
+        private async Task<ListAnalysisItem> MapUserPriceToListItem(UserPrice userPrice)
         {
+            var userEntity = await _userRepository.GetByUserName(userPrice.UserName);
+            var user = _mapper.Map<User>(userEntity);
+            
             return new ListAnalysisItem
             {
                 Item = userPrice.Item,
                 Price = userPrice.Price,
                 IsSalePrice = userPrice.IsSalePrice,
-                TagNames = userPrice.TagNames
+                TagNames = userPrice.TagNames,
+                PriceSubmittedBy = new PriceAttribution
+                {
+                    UserName = user.UserName,
+                    UserReputation = user.Reputation,
+                    UserLevel = user.GetUserLevel()
+                }
             };
         }
 
@@ -232,44 +222,21 @@ namespace Markit.Api.Managers
 
             var listTags = (await Task.WhenAll(listTagEntities.Select( async t =>
             {
-                var tag = await _tagRepository.GetTagById(t.TagId);
-                
-                return new ListTag
-                {
-                    Id = t.Id,
-                    Tag = new Tag
-                    {
-                        Id = tag.Id,
-                        Name = tag.Name
-                    },
-                    Quantity = t.Quantity,
-                    Comment = t.Comment
-                };
+                var tagEntity = await _tagRepository.GetTagById(t.TagId);
+                return BuildListTagFromEntity(t, tagEntity);
             }))).ToList();
-            
-            return new ShoppingList
-            {
-                Id = entity.Id,
-                UserId = entity.UserId,
-                Name = entity.Name,
-                Description = entity.Description,
-                ListTags = listTags
-            };
+
+            var shoppingList = _mapper.Map<ShoppingList>(entity);
+            shoppingList.ListTags = listTags;
+
+            return shoppingList;
         }
 
         private ListTag BuildListTagFromEntity(ListTagEntity listTagEntity, TagEntity tagEntity)
         {
-            return new ListTag
-            {
-                Id = listTagEntity.Id,
-                Tag = new Tag
-                {
-                    Id = listTagEntity.TagId,
-                    Name = tagEntity.Name
-                },
-                Quantity = listTagEntity.Quantity,
-                Comment = listTagEntity.Comment
-            };
+            var listTag = _mapper.Map<ListTag>(listTagEntity);
+            listTag.Tag.Name = tagEntity.Name;
+            return listTag;
         }
 
         private int AssignStalenessToPrice(UserPrice price)

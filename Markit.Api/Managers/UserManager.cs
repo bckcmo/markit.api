@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
@@ -19,25 +20,19 @@ namespace Markit.Api.Managers
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordUtil _passwordUtil;
+        private readonly IMapper _mapper;
 
-        public UserManager(IUserRepository userRepository, IPasswordUtil passwordUtil)
+        public UserManager(IUserRepository userRepository, IPasswordUtil passwordUtil, IMapper mapper)
         {
             _userRepository = userRepository;
             _passwordUtil = passwordUtil;
+            _mapper = mapper;
         }
 
         public async Task<User> GetUserByIdAsync(int id)
         {
-            var user = await _userRepository.GetById(id);
-
-            return new User
-            {
-               Id = user.Id,
-               FirstName = user.FirstName,
-               LastName = user.LastName,
-               UserName = user.UserName,
-               Reputation = user.Reputation,
-            };
+            var userEntity = await _userRepository.GetById(id);
+           return _mapper.Map<User>(userEntity);
         }
 
         public async Task<User> CreateUserAsync(UserRegistration user)
@@ -45,14 +40,7 @@ namespace Markit.Api.Managers
             user.Password = _passwordUtil.Hash(user.Password);
             var userEntity = await _userRepository.CreateUser(user);
             
-            return new User
-            {
-                Id = userEntity.Id,
-                FirstName = userEntity.FirstName,
-                LastName = userEntity.LastName,
-                UserName = userEntity.UserName,
-                Reputation = userEntity.Reputation
-            };
+            return _mapper.Map<User>(userEntity);
         }
         
         public async Task<User> UpdateUserAsync(User user)
@@ -64,14 +52,7 @@ namespace Markit.Api.Managers
                 return new User();
             }
             
-            return new User
-            {
-                Id = userEntity.Id,
-                FirstName = userEntity.FirstName,
-                LastName = userEntity.LastName,
-                UserName = userEntity.UserName,
-                Reputation = userEntity.Reputation
-            };
+            return _mapper.Map<User>(userEntity);
         }
         
         public async Task<bool> DeleteUserAsync(int id)

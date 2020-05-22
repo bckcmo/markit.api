@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Interfaces.Utils;
 using Markit.Api.Managers;
+using Markit.Api.Mappers;
 using Markit.Api.Models.Dtos;
 using Markit.Api.Repositories;
 using Markit.Api.Utils;
@@ -89,6 +91,8 @@ namespace Markit.Api
                 });
             
             services.AddControllers();
+            
+            services.AddAutoMapper(typeof(Startup).Assembly);
 
             services
                 .AddSingleton<IHttpContextAccessor, HttpContextAccessor>()

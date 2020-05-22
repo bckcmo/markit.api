@@ -98,21 +98,6 @@ namespace Markit.Api.Repositories
             return result;
         }
 
-        public async Task<List<UserPriceEntity>> GetMostRecentUserPriceByTagName(int storeItemId)
-        {
-            using var conn = connection;
-            var query = @"SELECT * from userPrices where StoreItemId = @storeItemId";
-
-            conn.Open();
-
-            var result = await conn.QueryAsync<UserPriceEntity>(query, new
-            {
-                StoreItemId = storeItemId
-            });
-
-            return result.ToList();
-        }
-
         public async Task<List<UserPriceEntity>> GetUserPricesByStoreItemIds(List<int> storeItemIds)
         {
             using var conn = connection;
