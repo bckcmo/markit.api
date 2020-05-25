@@ -10,6 +10,7 @@ namespace Markit.Api.Interfaces.Repositories
     {
         Task<StoreEntity>CreateStore(Store store);
         Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon);
+        Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon, int limit);
         Task<StoreEntity> GetStoreById(int id);
         Task<IList<StoreEntity>> GetStoresByIds(List<int> ids);
         Task<IList<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds);

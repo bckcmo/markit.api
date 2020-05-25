@@ -11,11 +11,12 @@ namespace Markit.Api.Managers
     public class StoreManager : IStoreManager
     {
         private readonly IStoreRepository _storeRepository;
-        private readonly Mapper _mapper;
+        private readonly IMapper _mapper;
 
         public StoreManager(IStoreRepository storeRepository, IMapper mapper)
         {
             _storeRepository = storeRepository;
+            _mapper = mapper;
         }
         
         public async Task<Store> CreateStoreAsync(Store store)
@@ -27,7 +28,7 @@ namespace Markit.Api.Managers
         public async Task<IEnumerable<Store>> QueryByCoordinatesAsync(decimal lat, decimal lon)
         {
             var storeEntities = await _storeRepository.QueryByCoordinates(lat, lon);
-            return storeEntities.Select(_mapper.Map<Store>);
+            return storeEntities.Select(s => _mapper.Map<Store>(s));
         }
 
         public async Task<Store> GetById(int id)

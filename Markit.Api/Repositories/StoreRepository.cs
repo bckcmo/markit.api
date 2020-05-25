@@ -46,7 +46,7 @@ namespace Markit.Api.Repositories
             return result.Single();
         }
 
-        public async Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon)
+        public async Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon, int limit)
         {
             using var conn = connection;
             var query =
@@ -56,11 +56,16 @@ namespace Markit.Api.Repositories
                     cos( radians( @lon ) - radians(Longitude) ) + 
                     sin ( radians(@lat) ) * sin( radians( Latitude ) ))) 
                     AS distance FROM stores HAVING distance < 10 ORDER BY distance 
-                    LIMIT 0 , 20;";
+                    LIMIT 0 , @limit;";
             
             conn.Open();
 
-            return (await conn.QueryAsync<StoreEntity>(query, new {lat, lon})).ToList();
+            return (await conn.QueryAsync<StoreEntity>(query, new {lat, lon, limit})).ToList();
+        }
+
+        public async Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon)
+        {
+            return await this.QueryByCoordinates(lat, lon, 20);
         }
 
         public async Task<StoreEntity> GetStoreById(int id)
