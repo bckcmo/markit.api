@@ -9,5 +9,9 @@ namespace Markit.Api.Interfaces.Repositories
     {
         Task<List<RatingEntity>> GetRatingsForStoresAsync(IEnumerable<int> storeIds);
         Task<RatingEntity> CreateAsync(Rating rating);
+        Task<List<RatingEntity>> GetRecentRatingsAsync(int userId);
+        Task<IList<RatingEntity>> GetRatingsForStoreAsync(int storeId);
+        Task<int> GetRatingsCountByUserIdAsync(int userId);
+        Task<int> GetRatingsCountByStoreIdAsync(int storeId);
     }
 }

@@ -46,7 +46,7 @@ namespace Markit.Api.Repositories
             return result.Single();
         }
 
-        public async Task<IEnumerable<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon)
+        public async Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon)
         {
             using var conn = connection;
             var query =
@@ -60,7 +60,7 @@ namespace Markit.Api.Repositories
             
             conn.Open();
 
-            return await conn.QueryAsync<StoreEntity>(query, new {lat, lon});
+            return (await conn.QueryAsync<StoreEntity>(query, new {lat, lon})).ToList();
         }
 
         public async Task<StoreEntity> GetStoreById(int id)
@@ -75,7 +75,7 @@ namespace Markit.Api.Repositories
             return store.Single();
         }
 
-        public async Task<List<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds)
+        public async Task<IList<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds)
         {
             using var conn = connection;
             
@@ -121,6 +121,19 @@ namespace Markit.Api.Repositories
             var query = @"DELETE FROM stores WHERE Id = @id";
             
             await conn.ExecuteAsync(query, new { id });
+        }
+
+        public async Task<IList<StoreEntity>> GetStoresByIds(List<int> ids)
+        {
+            using var conn = connection;
+            
+            conn.Open();
+            
+            var query = @"SELECT * FROM stores WHERE Id IN @ids;";
+            
+            var results = await conn.QueryAsync<StoreEntity>(query, new { ids });
+
+            return results.ToList();
         }
     }
 }

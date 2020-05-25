@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models.Dtos;
+using Markit.Api.Models.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Markit.Api.Managers
 {
@@ -12,20 +15,22 @@ namespace Markit.Api.Managers
         private readonly IRatingRepository _ratingRepository;
         private readonly IStoreRepository _storeRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
 
         public RatingsManager(IRatingRepository ratingRepository, IStoreRepository storeRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository, IMapper mapper)
         {
             _ratingRepository = ratingRepository;
             _storeRepository = storeRepository;
             _userRepository = userRepository;
+            _mapper = mapper;
         }
 
         public async Task<Rating> CreateRating(Rating rating)
         {
             var newRating = await _ratingRepository.CreateAsync(rating);
             await _userRepository.AddToReputation(rating.UserId, 1);
-            var store = await _storeRepository.GetStoreById(rating.Store.Id);
+            var storeEntity = await _storeRepository.GetStoreById(rating.Store.Id);
 
             return new Rating
             {
@@ -33,31 +38,48 @@ namespace Markit.Api.Managers
                 Comment = rating.Comment,
                 Points = rating.Points,
                 UserId = rating.UserId,
-                Store = new Store
-                {
-                    StreetAddress = store.StreetAddress,
-                    City = store.City,
-                    State = store.State,
-                    PostalCode = store.PostalCode,
-                    Id = store.Id,
-                    Name = store.Name,
-                    Coordinate = new Coordinate
-                    {
-                        Latitude = store.Latitude,
-                        Longitude = store.Longitude
-                    },
-                    GoogleId = store.GoogleId,
-                    AverageRating = store.AverageRating
-                }
+                Store = _mapper.Map<Store>(storeEntity)
             };
         }
         
         public async Task<IList<Rating>> QueryByCoordinatesAsync(decimal latitude, decimal longitude)
         {
-            var stores = await _storeRepository.QueryByCoordinates(latitude, longitude);
+            var stores = (await _storeRepository.QueryByCoordinates(latitude, longitude)).ToList();
             var storeIds = stores.Select(s => s.Id);
             var ratingEntities = await _ratingRepository.GetRatingsForStoresAsync(storeIds);
-            var ratings = ratingEntities.Join(stores, r
+            return BuildRatingsFromEntities(ratingEntities, stores);
+        }
+
+        public async Task<RatingsList> GetRatingsByStoreId(int storeId)
+        {
+            var storeEntity = await _storeRepository.GetStoreById(storeId);
+            var storeEntityList = new List<StoreEntity> {storeEntity};
+            var ratingEntities = await _ratingRepository.GetRatingsForStoreAsync(storeId);
+            var ratings = BuildRatingsFromEntities(ratingEntities, storeEntityList);
+
+            return new RatingsList
+            {
+                Ratings = ratings,
+                TotalRecords = await _ratingRepository.GetRatingsCountByStoreIdAsync(storeId)
+            };
+        }
+
+        public async Task<UserRatingsList> GetRecentRatings(int userId)
+        {
+            var ratingEntities = await _ratingRepository.GetRecentRatingsAsync(userId);
+            var storeIds = ratingEntities.Select(r => r.StoreId).ToList();
+            var storeEntities = await _storeRepository.GetStoresByIds(storeIds);
+            var ratings = BuildRatingsFromEntities(ratingEntities, storeEntities);
+            return new UserRatingsList
+            {
+                Ratings = ratings,
+                TotalRecords = await _ratingRepository.GetRatingsCountByUserIdAsync(userId)
+            };
+        }
+
+        private List<Rating> BuildRatingsFromEntities(IList<RatingEntity> ratingEntities, IList<StoreEntity> storeEntities)
+        {
+            var ratings = ratingEntities.Join(storeEntities, r
                 => r.StoreId, s
                 => s.Id, (rating, store) => new Rating
             {
@@ -65,22 +87,7 @@ namespace Markit.Api.Managers
                 UserId = rating.UserId,
                 Comment = rating.Comment,
                 Points = rating.Points,
-                Store = new Store
-                {
-                    Id = store.Id,
-                    Name = store.Name,
-                    StreetAddress = store.StreetAddress,
-                    City = store.City,
-                    State = store.State,
-                    PostalCode = store.PostalCode,
-                    Coordinate = new Coordinate
-                    {
-                        Latitude = store.Latitude,
-                        Longitude = store.Longitude
-                    },
-                    GoogleId = store.GoogleId,
-                    AverageRating = store.AverageRating
-                }
+                Store = _mapper.Map<Store>(store)
             });
             
             return ratings.ToList();

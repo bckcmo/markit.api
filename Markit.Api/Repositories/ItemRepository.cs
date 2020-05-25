@@ -39,13 +39,12 @@ namespace Markit.Api.Repositories
         public async Task<StoreItemEntity> GetStoreItemById(int id)
         {
             using var conn = connection;
-            var query =
-                @"SELECT * FROM storeitems WHERE Id = @id";
+            var query = @"SELECT * FROM storeitems WHERE Id = @id";
             
             conn.Open();
             
-            var result = await conn.QueryAsync<StoreItemEntity>(query, new { id });
-            return result.Single();
+            var result = await conn.QuerySingleAsync<StoreItemEntity>(query, new { id });
+            return result;
         }
         
         public async Task<StoreItemEntity> GetStoreItemByItemId(int id)
@@ -101,13 +100,36 @@ namespace Markit.Api.Repositories
         public async Task<List<UserPriceEntity>> GetUserPricesByStoreItemIds(List<int> storeItemIds)
         {
             using var conn = connection;
-            
             conn.Open();
             
             var query = @"SELECT * FROM userprices WHERE StoreItemId IN @storeItemIds ORDER BY CreatedAt DESC LIMIT 20";
-            
             var results = await conn.QueryAsync<UserPriceEntity>(query, new { storeItemIds });
 
+            return results.ToList();
+        }
+        
+        public async Task<List<UserPriceEntity>> GetUserPricesByUserId(int userId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT * FROM userprices WHERE UserId = @userId ORDER BY CreatedAt DESC LIMIT 20";
+            var results = await conn.QueryAsync<UserPriceEntity>(query, new { userId });
+            
+            return results.ToList();
+        }
+        
+        public async Task<List<UserPriceEntity>> GetUserPricesByStoreId(int storeId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT * FROM userprices 
+                        JOIN storeItems on storeItems.Id = userPrices.StoreItemId
+                        where storeItems.storeId = @storeId
+                        ORDER BY CreatedAt DESC LIMIT 20";
+            var results = await conn.QueryAsync<UserPriceEntity>(query, new { storeId });
+            
             return results.ToList();
         }
 
@@ -125,6 +147,30 @@ namespace Markit.Api.Repositories
             var result = await conn.QueryAsync<UserPriceEntity>(query, new { tagName, storeId });
 
             return result.FirstOrDefault();
+        }
+        
+        public async Task<int> GetUserPriceCountByUserId(int userId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT COUNT(Id) from userPrices where userId = @userId ";
+            var results = await conn.QuerySingleAsync<int>(query, new { userId });
+            
+            return results;
+        }
+        
+        public async Task<int> GetUserPriceCountByStoreId(int storeId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT COUNT(userPrices.Id) from userPrices
+                        JOIN storeItems on storeItems.Id = userPrices.StoreItemId
+                        where storeItems.storeId = @storeId ";
+            var results = await conn.QuerySingleAsync<int>(query, new { storeId });
+            
+            return results;
         }
 
         private async Task<TagEntity> AddTag(string tag, string upc)

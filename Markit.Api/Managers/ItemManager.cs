@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Markit.Api.Interfaces.Managers;
 using Markit.Api.Interfaces.Repositories;
 using Markit.Api.Models.Dtos;
@@ -16,14 +17,16 @@ namespace Markit.Api.Managers
         private readonly IStoreRepository _storeRepository;
         private readonly IUserRepository _userRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly IMapper _mapper;
         
         public ItemManager(IItemRepository itemRepository, IStoreRepository storeRepository, 
-            IUserRepository userRepository, ITagRepository tagRepository)
+            IUserRepository userRepository, ITagRepository tagRepository, IMapper mapper)
         {
             _itemRepository = itemRepository;
             _storeRepository = storeRepository;
             _userRepository = userRepository;
             _tagRepository = tagRepository;
+            _mapper = mapper;
         }
         
         public async Task<StoreItem> CreateStoreItemAsync(PostStoreItem item)
@@ -45,12 +48,7 @@ namespace Markit.Api.Managers
         public async Task<Item> GetItemByIdAsync(int id)
         {
             var itemEntity = await _itemRepository.GetItemById(id);
-
-            return new Item
-            {
-                Id = itemEntity.Id,
-                Upc = itemEntity.Upc,
-            };
+            return _mapper.Map<Item>(itemEntity);
         }
 
         public async Task DeleteItem(int id)
@@ -69,6 +67,28 @@ namespace Markit.Api.Managers
             return (await Task.WhenAll(userPriceEntities.Select(GetUserPriceFromEntity))).ToList();
         }
 
+        public async Task<UserPriceList> GetUserPricesFromUserId(int userId)
+        {
+            var userPriceEntities = await _itemRepository.GetUserPricesByUserId(userId);
+            var userPrices = (await Task.WhenAll(userPriceEntities.Select(GetUserPriceFromEntity)));
+            return new UserPriceList
+            {
+                UserPrices = userPrices.ToList(),
+                TotalRecords = await _itemRepository.GetUserPriceCountByUserId(userId)
+            };
+        }
+        
+        public async Task<UserPriceList> GetUserPricesFromStoreId(int storeId)
+        {
+            var userPriceEntities = await _itemRepository.GetUserPricesByStoreId(storeId);
+            var userPrices = (await Task.WhenAll(userPriceEntities.Select(GetUserPriceFromEntity)));
+            return new UserPriceList
+            {
+                UserPrices = userPrices.ToList(),
+                TotalRecords = await _itemRepository.GetUserPriceCountByStoreId(storeId)
+            };
+        }
+
         public async Task<UserPrice> GetUserPriceFromEntity(UserPriceEntity userPriceEntity)
         {
             var storeItemEntity = await _itemRepository.GetStoreItemById(userPriceEntity.StoreItemId);
@@ -81,27 +101,8 @@ namespace Markit.Api.Managers
             {
                 Id = userPriceEntity.Id,
                 UserName = userEntity.UserName,
-                Store = new Store
-                {
-                    Id = storeEntity.Id,
-                    Name = storeEntity.Name,
-                    StreetAddress = storeEntity.StreetAddress,
-                    City = storeEntity.City,
-                    State = storeEntity.State,
-                    PostalCode = storeEntity.PostalCode,
-                    Coordinate = new Coordinate
-                    {
-                        Latitude = storeEntity.Latitude,
-                        Longitude = storeEntity.Longitude
-                    },
-                    GoogleId = storeEntity.GoogleId,
-                    AverageRating = storeEntity.AverageRating
-                },
-                Item = new Item
-                {
-                    Id = itemEntity.Id,
-                    Upc = itemEntity.Upc
-                },
+                Store = _mapper.Map<Store>(storeEntity),
+                Item = _mapper.Map<Item>(itemEntity),
                 Price = userPriceEntity.Price,
                 TagNames = tags.Select(t => t.Name).ToList(),
                 IsSalePrice = userPriceEntity.IsSalePrice,

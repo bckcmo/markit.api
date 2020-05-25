@@ -26,6 +26,9 @@ namespace Markit.Api.Mappers
                         {
                             Id = src.TagId
                         }));
+
+            CreateMap<RatingEntity, Rating>();
+            CreateMap<ItemEntity, Item>();
         }
     }
 }

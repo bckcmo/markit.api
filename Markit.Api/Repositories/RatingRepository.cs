@@ -55,5 +55,51 @@ namespace Markit.Api.Repositories
 
             return results.ToList();
         }
+
+        public async Task<List<RatingEntity>> GetRecentRatingsAsync(int userId)
+        {
+            using var conn = connection;
+            var query = @"SELECT * FROM ratings WHERE UserId = @userId ORDER BY CreatedAt DESC LIMIT 20";
+            
+            conn.Open();
+
+            var results = await conn.QueryAsync<RatingEntity>(query, new { userId });
+
+            return results.ToList();
+        }
+
+        public async Task<int> GetRatingsCountByUserIdAsync(int userId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT COUNT(Id) from ratings where userId = @userId ";
+            var results = await conn.QuerySingleAsync<int>(query, new { userId });
+            
+            return results;
+        }
+        
+        public async Task<int> GetRatingsCountByStoreIdAsync(int storeId)
+        {
+            using var conn = connection;
+            conn.Open();
+            
+            var query = @"SELECT COUNT(Id) from ratings where storeId = @storeId ";
+            var results = await conn.QuerySingleAsync<int>(query, new { storeId });
+            
+            return results;
+        }
+
+        public async Task<IList<RatingEntity>> GetRatingsForStoreAsync(int storeId)
+        {
+            using var conn = connection;
+            var query = @"SELECT * FROM ratings WHERE StoreId = @storeId ORDER BY CreatedAt DESC LIMIT 20";
+            
+            conn.Open();
+
+            var results = await conn.QueryAsync<RatingEntity>(query, new { storeId });
+
+            return results.ToList();
+        }
     }
 }

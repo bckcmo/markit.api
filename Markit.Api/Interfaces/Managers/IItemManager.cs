@@ -9,6 +9,8 @@ namespace Markit.Api.Interfaces.Managers
     {
         Task<StoreItem> CreateStoreItemAsync(PostStoreItem item);
         Task<Item> GetItemByIdAsync(int id);
+        Task<UserPriceList> GetUserPricesFromUserId(int userId);
+        Task<UserPriceList> GetUserPricesFromStoreId(int userId);
         Task<List<UserPrice>> QueryByCoordinatesAsync(decimal latitude, decimal longitude);
         Task<UserPrice> GetUserPriceFromEntity(UserPriceEntity userPriceEntity);
         Task DeleteItem(int id);

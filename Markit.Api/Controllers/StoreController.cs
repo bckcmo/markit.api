@@ -14,11 +14,16 @@ namespace Markit.Api.Controllers
      public class StoreController : Controller
      {
          private readonly IStoreManager _storeManager;
+         private readonly IRatingsManager _ratingsManager;
+         private readonly IItemManager _itemManager;
          private readonly IHttpContextAccessor _httpContext;
 
-         public StoreController(IHttpContextAccessor httpContext, IStoreManager storeManager)
+         public StoreController(IHttpContextAccessor httpContext, IStoreManager storeManager, 
+             IRatingsManager ratingsManager, IItemManager itemManager)
          {
              _storeManager = storeManager;
+             _ratingsManager = ratingsManager;
+             _itemManager = itemManager;
              _httpContext = httpContext;
          }
          
@@ -26,6 +31,19 @@ namespace Markit.Api.Controllers
          public async Task<IActionResult> Get(int storeId)
          {
              var store = await _storeManager.GetById(storeId);
+             return Ok( new MarkitApiResponse { Data = store });
+         }
+         
+         [HttpGet("{storeId}/ratings")]
+         public async Task<IActionResult> GetRatings(int storeId)
+         {
+             var ratings = await _ratingsManager.GetRatingsByStoreId(storeId);
+             return Ok( new MarkitApiResponse { Data = ratings });
+         }
+         [HttpGet("{storeId}/prices")]
+         public async Task<IActionResult> GetPrices(int storeId)
+         {
+             var store = await _itemManager.GetUserPricesFromStoreId(storeId);
              return Ok( new MarkitApiResponse { Data = store });
          }
          

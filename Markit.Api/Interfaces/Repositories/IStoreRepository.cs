@@ -9,9 +9,10 @@ namespace Markit.Api.Interfaces.Repositories
     public interface IStoreRepository
     {
         Task<StoreEntity>CreateStore(Store store);
-        Task<IEnumerable<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon);
+        Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon);
         Task<StoreEntity> GetStoreById(int id);
-        Task<List<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds);
+        Task<IList<StoreEntity>> GetStoresByIds(List<int> ids);
+        Task<IList<StoreItemEntity>> GetStoreItemsFromStoreIds(List<int> storeIds);
         Task<StoreEntity> ReplaceStore(Store store);
         Task DeleteStoreById(int id);
     }

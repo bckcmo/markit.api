@@ -13,7 +13,11 @@ namespace Markit.Api.Interfaces.Repositories
         Task<ItemEntity> CreateItem(Item item);
         Task<StoreItemEntity> CreateStoreItem(PostStoreItem item);
         Task<List<UserPriceEntity>> GetUserPricesByStoreItemIds(List<int> storeItemIds);
+        Task<List<UserPriceEntity>> GetUserPricesByUserId(int userId);
+        Task<List<UserPriceEntity>> GetUserPricesByStoreId(int storeId);
         Task<UserPriceEntity> GetMostRecentUserPriceByTagName(string tagName, int storeId);
+        Task<int> GetUserPriceCountByUserId(int userId);
+        Task<int> GetUserPriceCountByStoreId(int storeId);
         Task DeleteItemById(int id);
     }
 }
