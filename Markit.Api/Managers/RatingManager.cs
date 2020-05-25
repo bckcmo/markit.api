@@ -38,7 +38,8 @@ namespace Markit.Api.Managers
                 Comment = rating.Comment,
                 Points = rating.Points,
                 UserId = rating.UserId,
-                Store = _mapper.Map<Store>(storeEntity)
+                Store = _mapper.Map<Store>(storeEntity),
+                CreatedAt = rating.CreatedAt
             };
         }
         
@@ -87,7 +88,8 @@ namespace Markit.Api.Managers
                 UserId = rating.UserId,
                 Comment = rating.Comment,
                 Points = rating.Points,
-                Store = _mapper.Map<Store>(store)
+                Store = _mapper.Map<Store>(store),
+                CreatedAt = rating.CreatedAt
             });
             
             return ratings.ToList();
