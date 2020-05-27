@@ -48,6 +48,8 @@ namespace Markit.Api.Repositories
 
         public async Task<IList<StoreEntity>> QueryByCoordinates(decimal lat, decimal lon, int limit)
         {
+            var limitString = limit == 0 ? ";" : "LIMIT 0 , @limit;";
+            
             using var conn = connection;
             var query =
                 @"SELECT *, 
@@ -55,8 +57,7 @@ namespace Markit.Api.Repositories
                     acos (cos ( radians(@lat) ) * cos( radians( Latitude ) ) * 
                     cos( radians( @lon ) - radians(Longitude) ) + 
                     sin ( radians(@lat) ) * sin( radians( Latitude ) ))) 
-                    AS distance FROM stores HAVING distance < 10 ORDER BY distance 
-                    LIMIT 0 , @limit;";
+                    AS distance FROM stores HAVING distance < 10 ORDER BY distance " + limitString;
             
             conn.Open();
 

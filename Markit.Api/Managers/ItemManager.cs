@@ -100,7 +100,7 @@ namespace Markit.Api.Managers
             return new UserPrice
             {
                 Id = userPriceEntity.Id,
-                UserName = userEntity.UserName,
+                User = _mapper.Map<User>(userEntity),
                 Store = _mapper.Map<Store>(storeEntity),
                 Item = _mapper.Map<Item>(itemEntity),
                 Price = userPriceEntity.Price,

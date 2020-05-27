@@ -99,7 +99,7 @@ namespace Markit.Api.Managers
 
         public async Task<ListAnalysis> AnalyzeList(ShoppingList list, decimal latitude, decimal longitude)
         {
-            var nearbyStores = (await _storeRepository.QueryByCoordinates(latitude, longitude)).ToList();
+            var nearbyStores = (await _storeRepository.QueryByCoordinates(latitude, longitude, 0)).ToList();
 
             if (!nearbyStores.Any())
             {
@@ -113,8 +113,26 @@ namespace Markit.Api.Managers
                 listAnalysis.Rankings.Add(await BuildStoreAnalysisFromStoreEntity(store, list));
             }
 
+            // If any ranking contains all the items in the shopping list, remove all the rankings that do not
+            // else, remove all rankings that have no items
+            if (listAnalysis.Rankings.Any(r => r.MatchedRatio >= 1))
+            { 
+                listAnalysis.Rankings.RemoveAll(r => r.MatchedRatio < 1);
+            }
+            else
+            {
+                listAnalysis.Rankings.RemoveAll(r => r.MatchedRatio <= 0);
+            }
+
+                        
+            // trim the list to the closest 20 (list is still in order of distance)
+            if (listAnalysis.Rankings.Count > 20)
+            {
+                listAnalysis.Rankings.RemoveRange(20, listAnalysis.Rankings.Count - 20);   
+            }
+
             AddRankingsToList(listAnalysis);
-            
+
             return listAnalysis;
         }
 
@@ -124,15 +142,15 @@ namespace Markit.Api.Managers
 
             listAnalysis.Rankings = listAnalysis.Rankings.OrderBy(r => r.TotalPrice)
                 .Select(analysis => {
-                    analysis.PriceRank = analysis.MissingItems ? -1 : ++priceRank;
+                    analysis.PriceRank = analysis.MatchedRatio < 1 ? -1 : ++priceRank;
                     return analysis;
                 }).OrderBy(r => r.Staleness)
                 .Select(analysis => {
-                    analysis.StalenessRank = analysis.MissingItems ? -1 : ++stalnessRank;
+                    analysis.StalenessRank = analysis.MatchedRatio < 1 ? -1 : ++stalnessRank;
                     return analysis; 
                 }).OrderBy(r => (r.StalenessRank * 0.333 ) + ( r.PriceRank * 0.6666))
                 .Select(analysis => {
-                    analysis.PriceAndStalenessRank = analysis.MissingItems ? -1 : ++totalRank;
+                    analysis.PriceAndStalenessRank = analysis.MatchedRatio < 1 ? -1 : ++totalRank;
                     return analysis; 
                 }).ToList();
         }
@@ -140,17 +158,19 @@ namespace Markit.Api.Managers
         private async Task<StoreAnalysis> BuildStoreAnalysisFromStoreEntity(StoreEntity storeEntity, ShoppingList list)
         {
             var userPrices = await GetUserPricesFromList(list, storeEntity);
-            
+
             var storeAnalysis = new StoreAnalysis {ListItems = new List<ListAnalysisItem>()};
+            decimal expectedItems = userPrices.Count;
+            var totalItems = expectedItems;
 
             foreach (var userPrice in userPrices)
             {
                 if (userPrice == null)
                 {
-                    storeAnalysis.MissingItems = true;
+                    --totalItems;
                     continue;
                 }
-                
+
                 var quantity = list.ListTags.FirstOrDefault(t => userPrice.TagNames.Contains(t.Tag.Name))?.Quantity;
                 quantity ??= 1;
                 storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
@@ -159,6 +179,7 @@ namespace Markit.Api.Managers
             }
 
             storeAnalysis.Store = _mapper.Map<Store>(storeEntity);
+            storeAnalysis.MatchedRatio = Math.Round(totalItems / expectedItems, 2);
 
             return storeAnalysis;
         }
@@ -198,7 +219,7 @@ namespace Markit.Api.Managers
 
         private async Task<ListAnalysisItem> MapUserPriceToListItem(UserPrice userPrice)
         {
-            var userEntity = await _userRepository.GetByUserName(userPrice.UserName);
+            var userEntity = await _userRepository.GetByUserName(userPrice.User.UserName);
             var user = _mapper.Map<User>(userEntity);
             
             return new ListAnalysisItem
@@ -211,7 +232,8 @@ namespace Markit.Api.Managers
                 {
                     UserName = user.UserName,
                     UserReputation = user.Reputation,
-                    UserLevel = user.GetUserLevel()
+                    UserLevel = user.GetUserLevel(),
+                    SubmittedDate = userPrice.CreatedAt
                 }
             };
         }

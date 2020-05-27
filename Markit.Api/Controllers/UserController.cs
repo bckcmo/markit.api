@@ -196,12 +196,12 @@ namespace Markit.Api.Controllers
                     Errors = new List<string> { exception.Message }
                 });
             }
-            catch (Exception exception)
+            catch
             {
                 return NotFound(new MarkitApiResponse
                 {
                     StatusCode = StatusCodes.Status404NotFound,
-                    Errors = new List<string> { $"{ErrorMessages.ResourceNotFound}. List with Id {listId} does not exist." }
+                    Errors = new List<string> { $"{ErrorMessages.ResourceNotFound} List with Id {listId} does not exist." }
                 });
             }
         }

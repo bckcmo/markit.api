@@ -6,7 +6,7 @@ namespace Markit.Api.Interfaces.Managers
 {
     public interface IRatingsManager
     {
-        Task<IList<Rating>> QueryByCoordinatesAsync(decimal latitude, decimal longitude);
+        Task<IList<UserRating>> QueryByCoordinatesAsync(decimal latitude, decimal longitude);
         Task<RatingsList> GetRatingsByStoreId(int storeId);
         Task<Rating> CreateRating(Rating rating);
         Task<UserRatingsList> GetRecentRatings(int userId);

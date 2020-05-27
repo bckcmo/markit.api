@@ -10,7 +10,7 @@ namespace Markit.Api.Models.Dtos
         public int PriceRank { get; set; }
         public int StalenessRank { get; set; }
         public int PriceAndStalenessRank { get; set; }
-        public bool MissingItems { get; set; }
+        public decimal MatchedRatio { get; set; }
         public List<ListAnalysisItem> ListItems { get; set; }
     }
 }

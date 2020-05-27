@@ -43,24 +43,23 @@ namespace Markit.Api.Managers
             };
         }
         
-        public async Task<IList<Rating>> QueryByCoordinatesAsync(decimal latitude, decimal longitude)
+        public async Task<IList<UserRating>> QueryByCoordinatesAsync(decimal latitude, decimal longitude)
         {
-            var stores = (await _storeRepository.QueryByCoordinates(latitude, longitude)).ToList();
-            var storeIds = stores.Select(s => s.Id);
+            var storeEntities = (await _storeRepository.QueryByCoordinates(latitude, longitude)).ToList();
+            var storeIds = storeEntities.Select(s => s.Id);
             var ratingEntities = await _ratingRepository.GetRatingsForStoresAsync(storeIds);
-            return BuildRatingsFromEntities(ratingEntities, stores);
+            return await BuildRatingsFromEntities(ratingEntities, storeEntities);
         }
 
         public async Task<RatingsList> GetRatingsByStoreId(int storeId)
         {
             var storeEntity = await _storeRepository.GetStoreById(storeId);
-            var storeEntityList = new List<StoreEntity> {storeEntity};
+            var storeEntities = new List<StoreEntity> {storeEntity};
             var ratingEntities = await _ratingRepository.GetRatingsForStoreAsync(storeId);
-            var ratings = BuildRatingsFromEntities(ratingEntities, storeEntityList);
 
             return new RatingsList
             {
-                Ratings = ratings,
+                Ratings = await BuildRatingsFromEntities(ratingEntities, storeEntities),
                 TotalRecords = await _ratingRepository.GetRatingsCountByStoreIdAsync(storeId)
             };
         }
@@ -70,29 +69,29 @@ namespace Markit.Api.Managers
             var ratingEntities = await _ratingRepository.GetRecentRatingsAsync(userId);
             var storeIds = ratingEntities.Select(r => r.StoreId).ToList();
             var storeEntities = await _storeRepository.GetStoresByIds(storeIds);
-            var ratings = BuildRatingsFromEntities(ratingEntities, storeEntities);
+            
             return new UserRatingsList
             {
-                Ratings = ratings,
+                Ratings = await BuildRatingsFromEntities(ratingEntities, storeEntities),
                 TotalRecords = await _ratingRepository.GetRatingsCountByUserIdAsync(userId)
             };
         }
 
-        private List<Rating> BuildRatingsFromEntities(IList<RatingEntity> ratingEntities, IList<StoreEntity> storeEntities)
+        private async Task<List<UserRating>> BuildRatingsFromEntities(IList<RatingEntity> ratingEntities, IList<StoreEntity> storeEntities)
         {
-            var ratings = ratingEntities.Join(storeEntities, r
+            var ratingsTasks = ratingEntities.Join(storeEntities, r
                 => r.StoreId, s
-                => s.Id, (rating, store) => new Rating
+                => s.Id, async (rating, store) => new UserRating
             {
                 Id = rating.Id,
-                UserId = rating.UserId,
+                User = _mapper.Map<User>(await _userRepository.GetById(rating.UserId)),
                 Comment = rating.Comment,
                 Points = rating.Points,
                 Store = _mapper.Map<Store>(store),
                 CreatedAt = rating.CreatedAt
             });
             
-            return ratings.ToList();
+            return (await Task.WhenAll(ratingsTasks)).ToList();
         }
     }
 }
