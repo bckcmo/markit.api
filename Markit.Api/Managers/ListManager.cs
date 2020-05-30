@@ -231,6 +231,7 @@ namespace Markit.Api.Managers
                 PriceSubmittedBy = new PriceAttribution
                 {
                     UserName = user.UserName,
+                    UserId = user.Id,
                     UserReputation = user.Reputation,
                     UserLevel = user.GetUserLevel(),
                     SubmittedDate = userPrice.CreatedAt

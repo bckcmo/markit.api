@@ -80,15 +80,6 @@ namespace Markit.Api.Controllers
         [HttpGet("{userId}/ratings")]
         public async Task<IActionResult> GetRatings(int userId)
         {
-            if (!_httpContext.IsUserAllowed(userId))
-            {
-                return Unauthorized(new MarkitApiResponse
-                {
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Errors = new List<string> {ErrorMessages.UserDenied}
-                });
-            }
-
             var ratings = await _ratingsManager.GetRecentRatings(userId);
 
             return Ok(new MarkitApiResponse {Data = ratings});
@@ -97,15 +88,6 @@ namespace Markit.Api.Controllers
         [HttpGet("{userId}/prices")]
         public async Task<IActionResult> GetUserPrices(int userId)
         {
-            if (!_httpContext.IsUserAllowed(userId))
-            {
-                return Unauthorized(new MarkitApiResponse
-                {
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Errors = new List<string> {ErrorMessages.UserDenied}
-                });
-            }
-
             var ratings = await _itemManager.GetUserPricesFromUserId(userId);
 
             return Ok(new MarkitApiResponse {Data = ratings});
