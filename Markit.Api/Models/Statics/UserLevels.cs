@@ -2,10 +2,10 @@ namespace Markit.Api.Models.Statics
 {
     public enum UserLevels
     {
-        Shopper = 25,
-        SuperShopper = 100,
-        UltraSuperShopper = 250,
-        ExtremeUltraSuperShopper = 1000,
-        TheMostExtremeUltraSuperShopper = 5000
+        LevelOne = 25,
+        LevelTwo = 100,
+        LevelThree = 250,
+        LevelFour = 1000,
+        LevelFive = 5000
     }
 }

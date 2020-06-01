@@ -9,17 +9,17 @@ namespace Markit.Api.Extensions
     {
         private static readonly Dictionary<UserLevels, string> userLevelDictionary = new Dictionary<UserLevels, string>
         {
-            {UserLevels.Shopper, UserLevelNames.Shopper},
-            {UserLevels.SuperShopper, UserLevelNames.SuperShopper},
-            {UserLevels.UltraSuperShopper, UserLevelNames.UltraSuperShopper},
-            {UserLevels.ExtremeUltraSuperShopper, UserLevelNames.ExtremeUltraSuperShopper},
-            {UserLevels.TheMostExtremeUltraSuperShopper, UserLevelNames.TheMostExtremeUltraSuperShopper}
+            {UserLevels.LevelOne, UserLevelNames.LevelOne},
+            {UserLevels.LevelTwo, UserLevelNames.LevelTwo},
+            {UserLevels.LevelThree, UserLevelNames.LevelThree},
+            {UserLevels.LevelFour, UserLevelNames.LevelFour},
+            {UserLevels.LevelFive, UserLevelNames.LevelFive}
         }; 
         
         public static string GetUserLevel(this User user)
         {
             return userLevelDictionary.FirstOrDefault(i => user.Reputation < (int) i.Key).Value
-                ?? UserLevelNames.TheVeryMostExtremeUltraSuperShopper;
+                ?? UserLevelNames.LevelSix;
         }
     }
 }
