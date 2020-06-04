@@ -141,7 +141,7 @@ namespace Markit.Api.Repositories
             var query = @"Select * FROM userPrices 
                           JOIN storeItems ON storeItems.Id = userPrices.StoreItemId 
                           WHERE storeItems.StoreId = @storeId 
-                          AND itemId = (SELECT itemId FROM itemtags WHERE tagId = (SELECT id FROM tags WHERE NAME = @tagName)) 
+                          AND itemId IN (SELECT itemId FROM itemtags WHERE tagId = (SELECT id FROM tags WHERE NAME = @tagName)) 
                           ORDER BY userprices.CreatedAt DESC LIMIT 1";
             
             var result = await conn.QueryAsync<UserPriceEntity>(query, new { tagName, storeId });
