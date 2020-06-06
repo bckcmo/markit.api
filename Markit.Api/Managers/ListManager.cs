@@ -162,6 +162,7 @@ namespace Markit.Api.Managers
             var storeAnalysis = new StoreAnalysis {ListItems = new List<ListAnalysisItem>()};
             decimal expectedItems = userPrices.Count;
             var totalItems = expectedItems;
+            var index = 0;
 
             foreach (var userPrice in userPrices)
             {
@@ -171,7 +172,7 @@ namespace Markit.Api.Managers
                     continue;
                 }
 
-                var quantity = list.ListTags.FirstOrDefault(t => userPrice.TagNames.Contains(t.Tag.Name))?.Quantity;
+                var quantity = list.ListTags.ElementAtOrDefault(index++).Quantity;
                 quantity ??= 1;
                 storeAnalysis.TotalPrice += (userPrice.Price * (decimal) quantity);
                 storeAnalysis.Staleness += AssignStalenessToPrice(userPrice);
